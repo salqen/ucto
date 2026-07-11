@@ -25,19 +25,31 @@ const DEFAULT_DB = {
 
 let db;
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
+/* úložisko považujeme za "prázdne", ak nemá ani faktúry ani partnerov
+   (tak vieme prepísať aj prázdne demo dáta reálnymi zo seed.json) */
+function looksEmpty(o) {
+  if (!o || typeof o !== 'object') return true;
+  const noInv = !Array.isArray(o.invoices) || o.invoices.length === 0;
+  const noPart = !Array.isArray(o.partners) || o.partners.length === 0;
+  return noInv && noPart;
+}
 async function ensureDb() {
   const raw = await store.readRaw();
-  if (raw && typeof raw === 'object') {
+  if (!looksEmpty(raw)) {
     db = raw;
     for (const k of Object.keys(DEFAULT_DB)) if (db[k] === undefined) db[k] = clone(DEFAULT_DB[k]);
-  } else {
-    // úložisko je prázdne -> naplň reálnymi dátami zo seed.json (ak sú), inak prázdna DB
-    const seed = store.readSeed ? store.readSeed() : null;
-    db = (seed && typeof seed === 'object') ? seed : clone(DEFAULT_DB);
-    for (const k of Object.keys(DEFAULT_DB)) if (db[k] === undefined) db[k] = clone(DEFAULT_DB[k]);
-    // zápis môže zlyhať, ak ešte nie je pripojené KV (Vercel má read-only disk) — nespadni, len zaloguj
-    try { await store.writeRaw(db); } catch (e) { console.error('Počiatočný zápis zlyhal (chýba KV / read-only disk):', e.message); }
+    return;
   }
+  // prázdne alebo len demo dáta -> naplň reálnymi zo seed.json
+  const seed = store.readSeed ? store.readSeed() : null;
+  if (seed && typeof seed === 'object' && !looksEmpty(seed)) {
+    db = clone(seed);
+  } else {
+    db = (raw && typeof raw === 'object') ? raw : clone(DEFAULT_DB);
+  }
+  for (const k of Object.keys(DEFAULT_DB)) if (db[k] === undefined) db[k] = clone(DEFAULT_DB[k]);
+  // zápis môže zlyhať, ak nie je pripojené KV (Vercel má read-only disk) — nespadni, len zaloguj
+  try { await store.writeRaw(db); } catch (e) { console.error('Zápis seedu zlyhal (chýba KV / read-only disk):', e.message); }
 }
 async function saveDb() {
   await store.writeRaw(db);

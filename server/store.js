@@ -54,14 +54,18 @@ async function writeRaw(obj) {
   fs.writeFileSync(DB_FILE, JSON.stringify(obj, null, 2), 'utf8');
 }
 
-/* počiatočné dáta (nasadené v repozitári) — použijú sa, keď je úložisko prázdne */
+/* počiatočné dáta (nasadené v repozitári) — použijú sa, keď je úložisko prázdne.
+   Používame require (statická cesta), aby Vercel súbor spoľahlivo pribalil do funkcie. */
 function readSeed() {
   try {
-    if (fs.existsSync(SEED_FILE)) return JSON.parse(fs.readFileSync(SEED_FILE, 'utf8'));
+    return require('../data/seed.json');
   } catch (e) {
+    try {
+      if (fs.existsSync(SEED_FILE)) return JSON.parse(fs.readFileSync(SEED_FILE, 'utf8'));
+    } catch (_) {}
     console.error('Nepodarilo sa načítať seed.json:', e.message);
+    return null;
   }
-  return null;
 }
 
 module.exports = { readRaw, writeRaw, readSeed, usingKV, KEY };
