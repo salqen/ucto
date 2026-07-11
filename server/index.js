@@ -31,8 +31,12 @@ async function ensureDb() {
     db = raw;
     for (const k of Object.keys(DEFAULT_DB)) if (db[k] === undefined) db[k] = clone(DEFAULT_DB[k]);
   } else {
-    db = clone(DEFAULT_DB);
-    await store.writeRaw(db);
+    // úložisko je prázdne -> naplň reálnymi dátami zo seed.json (ak sú), inak prázdna DB
+    const seed = store.readSeed ? store.readSeed() : null;
+    db = (seed && typeof seed === 'object') ? seed : clone(DEFAULT_DB);
+    for (const k of Object.keys(DEFAULT_DB)) if (db[k] === undefined) db[k] = clone(DEFAULT_DB[k]);
+    // zápis môže zlyhať, ak ešte nie je pripojené KV (Vercel má read-only disk) — nespadni, len zaloguj
+    try { await store.writeRaw(db); } catch (e) { console.error('Počiatočný zápis zlyhal (chýba KV / read-only disk):', e.message); }
   }
 }
 async function saveDb() {

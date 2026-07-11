@@ -1,0 +1,3111 @@
+{
+  "settings": {
+    "company": {
+      "name": "Eva Sičová LEONARDO",
+      "ico": "",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "",
+      "zip": "",
+      "iban": "",
+      "phone": "",
+      "email": "evasicova@gmail.com"
+    },
+    "year": 2026
+  },
+  "partners": [
+    {
+      "id": 37,
+      "name": "OBEC POLUVSIE Obecný úrad",
+      "ico": "00318418",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Pravenec",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 9,
+      "name": "ZUŠ L.Stančeka v Prievidzi",
+      "ico": "3612993",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "PRIEVIDZA",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 55,
+      "name": "alžbeta Burska",
+      "ico": "",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Brodské",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 29,
+      "name": "Anton Antokhov Warden Chartering s.r.o.",
+      "ico": "54765145",
+      "dic": "",
+      "icdph": "SK2121780617",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 54,
+      "name": "Art kino Baník",
+      "ico": "42281636",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 52,
+      "name": "Centrum účelových zariadení - Prevádzka Maják Senec",
+      "ico": "42137004",
+      "dic": "",
+      "icdph": "SK2022739697",
+      "street": "",
+      "city": "Piešťany",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 28,
+      "name": "DHZ BOZPO",
+      "ico": "50642626",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "PRIEVIDZA",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 21,
+      "name": "Dominika Rybárová",
+      "ico": "",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 24,
+      "name": "DUKE s.r.o.",
+      "ico": "36338737",
+      "dic": "",
+      "icdph": "SK2021888055",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 34,
+      "name": "dyera",
+      "ico": "55420036",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "PRIEVIDZA",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 1,
+      "name": "Helena Galbavá",
+      "ico": "",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Handlová",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 49,
+      "name": "helena galbavá",
+      "ico": "",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "handlová",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 40,
+      "name": "Hronský. s,r,o,",
+      "ico": "50104845",
+      "dic": "",
+      "icdph": "SK2120177455",
+      "street": "",
+      "city": "PRIEVIDZA",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 10,
+      "name": "Ing. Miloš Kováčik - AZET",
+      "ico": "30424933",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 14,
+      "name": "Ing.Katarína Doničová BOZPO",
+      "ico": "34960015",
+      "dic": "",
+      "icdph": "SK1020050581",
+      "street": "",
+      "city": "PRIEVIDZA",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 32,
+      "name": "INSANE s. r. o.",
+      "ico": "48175064",
+      "dic": "",
+      "icdph": "SK2120106219",
+      "street": "",
+      "city": "Bratislava",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 50,
+      "name": "IRIS IV. n,o,",
+      "ico": "45740429",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Skačany 3",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 5,
+      "name": "Iveta Ragulíková",
+      "ico": "",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 38,
+      "name": "Jabloň spol. sr.o.",
+      "ico": "50527363",
+      "dic": "",
+      "icdph": "SK2120360044",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 48,
+      "name": "JFP spol, s r,o,",
+      "ico": "51819627",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Banská Bystrica",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 23,
+      "name": "JFP spol. s.r.o.",
+      "ico": "35184884",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 2,
+      "name": "Jozef Mihálik",
+      "ico": "",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 27,
+      "name": "JPF spol. s r.o.",
+      "ico": "51819627",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Banská Bystrica",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 20,
+      "name": "Judr Robert Šorl",
+      "ico": "",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Handlová",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 22,
+      "name": "K-2000 Združenie na podporu kultúry Hornej Nitry",
+      "ico": "36120537",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 25,
+      "name": "Kass príspevková org, mesta Prievidza",
+      "ico": "00516 988",
+      "dic": "",
+      "icdph": "SK2021160317",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 31,
+      "name": "KLAK, s.r.o.",
+      "ico": "36 775 550",
+      "dic": "",
+      "icdph": "SK2022380294",
+      "street": "",
+      "city": "Klačno",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 26,
+      "name": "KreBul,o.p.s.",
+      "ico": "28553268",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prachatice",
+      "zip": "",
+      "country": "Česko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 36,
+      "name": "Kroje M V s,r.o",
+      "ico": "55102123",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Nitrianske Pravno",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 51,
+      "name": "Kultúrne a spoločenské stredisko v Prievidzi",
+      "ico": "00516988",
+      "dic": "",
+      "icdph": "SK2021160317",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 33,
+      "name": "Kultúrne centrum Bojnice príspevková organizáciamesta",
+      "ico": "42024960",
+      "dic": "",
+      "icdph": "SK2022471330",
+      "street": "",
+      "city": "BOJNICE",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 3,
+      "name": "Ladislav Brida",
+      "ico": "",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Banská Bystrica",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 16,
+      "name": "M+M Nova",
+      "ico": "44872011",
+      "dic": "",
+      "icdph": "SK2022857562",
+      "street": "",
+      "city": "Nováky",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 30,
+      "name": "MD SLOVENSKO s,r,o,",
+      "ico": "48292061",
+      "dic": "",
+      "icdph": "SK2120122543",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 43,
+      "name": "MDSK servis s.r.o.",
+      "ico": "52221792",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Poprad",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 8,
+      "name": "MESTSKÝ ÚRAD",
+      "ico": "318442",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 47,
+      "name": "Mgr Alžbeta Búrska",
+      "ico": "",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Brodskě",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 39,
+      "name": "MUDr. Peter Oulehle ORT-OF s.r.o.",
+      "ico": "36350150",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 41,
+      "name": "Múzeum VTEDY",
+      "ico": "51987040",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "PRIEVIDZA",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 11,
+      "name": "Občianske združenie Hornonitrie",
+      "ico": "31201822",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Nitrianske Pravno",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 12,
+      "name": "Obecný úrad Malinová",
+      "ico": "00318281",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Nitrianske Pravno",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 45,
+      "name": "oocr",
+      "ico": "",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 6,
+      "name": "ORVA color s.r.o.",
+      "ico": "44786093",
+      "dic": "",
+      "icdph": "SK2022821603",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 46,
+      "name": "RegiónHORNÁ NITRA BOJNICE oocr",
+      "ico": "",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "BOJNICE",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 13,
+      "name": "Rímskokatolícka cirkev - Farnosť Handlová",
+      "ico": "31938655",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Handlová",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 19,
+      "name": "RKC Prievidza",
+      "ico": "34059113",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 35,
+      "name": "Slovenské národné múzeum",
+      "ico": "00164721",
+      "dic": "",
+      "icdph": "SK2020603068",
+      "street": "",
+      "city": "Bratislava - staré mesto",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 44,
+      "name": "Slovenský akvarel OZ",
+      "ico": "54197473",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Hviezdoslavov",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 53,
+      "name": "Spoločnosť Joga v dennom živote - pobočka Prievidza",
+      "ico": "30231761",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 42,
+      "name": "Spoločnosť Joga v dennom živote, pobočka Prievidza",
+      "ico": "30231761",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 17,
+      "name": "Stober s.r.o.",
+      "ico": "31362249",
+      "dic": "",
+      "icdph": "SK2020469231",
+      "street": "",
+      "city": "PRIEVIDZA",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 7,
+      "name": "ŠPORTSTAV PRIEVIDZA spol.s r.o.",
+      "ico": "31578012",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 18,
+      "name": "Športstav spol.s r.o",
+      "ico": "31578012",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 4,
+      "name": "Základná škola",
+      "ico": "31201725",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "Prievidza",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    },
+    {
+      "id": 15,
+      "name": "Zuš Ladislava Stančeka",
+      "ico": "3612993",
+      "dic": "",
+      "icdph": "",
+      "street": "",
+      "city": "PRIEVIDZA",
+      "zip": "",
+      "country": "Slovensko",
+      "iban": "",
+      "email": "",
+      "phone": ""
+    }
+  ],
+  "invoices": [
+    {
+      "id": 1,
+      "type": "INO",
+      "number": "VF2026070098",
+      "vs": "2026070098",
+      "partnerId": 35,
+      "issueDate": "2026-07-02",
+      "deliveryDate": "2026-07-02",
+      "dueDate": "2026-07-16",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 480.55,
+          "vat": 0
+        }
+      ],
+      "total": 480.55,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 2,
+      "type": "INO",
+      "number": "VF2026030097",
+      "vs": "2026030097",
+      "partnerId": 54,
+      "issueDate": "2026-03-31",
+      "deliveryDate": "2026-03-31",
+      "dueDate": "2026-04-14",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 238,
+          "vat": 0
+        }
+      ],
+      "total": 238,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 3,
+      "type": "INO",
+      "number": "VF2026020096",
+      "vs": "2026020096",
+      "partnerId": 53,
+      "issueDate": "2026-02-16",
+      "deliveryDate": "2026-02-16",
+      "dueDate": "2026-03-02",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 286.9,
+          "vat": 0
+        }
+      ],
+      "total": 286.9,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 4,
+      "type": "INO",
+      "number": "VF2026010095",
+      "vs": "2026010095",
+      "partnerId": 52,
+      "issueDate": "2026-01-07",
+      "deliveryDate": "2026-01-07",
+      "dueDate": "2026-01-21",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 800,
+          "vat": 0
+        }
+      ],
+      "total": 800,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 5,
+      "type": "INO",
+      "number": "VF2025120094",
+      "vs": "2025120094",
+      "partnerId": 35,
+      "issueDate": "2025-12-03",
+      "deliveryDate": "2025-12-03",
+      "dueDate": "2025-12-17",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 200,
+          "vat": 0
+        }
+      ],
+      "total": 200,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 6,
+      "type": "INO",
+      "number": "VF2025120093",
+      "vs": "2025120093",
+      "partnerId": 51,
+      "issueDate": "2025-12-02",
+      "deliveryDate": "2025-12-02",
+      "dueDate": "2025-12-16",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 103.7,
+          "vat": 0
+        }
+      ],
+      "total": 103.7,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 7,
+      "type": "INO",
+      "number": "VF2025080092",
+      "vs": "2025080092",
+      "partnerId": 50,
+      "issueDate": "2025-08-15",
+      "deliveryDate": "2025-08-15",
+      "dueDate": "2025-08-29",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 90,
+          "vat": 0
+        }
+      ],
+      "total": 90,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 8,
+      "type": "INO",
+      "number": "VF2025080089",
+      "vs": "2025080089",
+      "partnerId": 27,
+      "issueDate": "2025-08-06",
+      "deliveryDate": "2025-08-06",
+      "dueDate": "2025-08-20",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 97.66,
+          "vat": 0
+        }
+      ],
+      "total": 97.66,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 9,
+      "type": "INO",
+      "number": "VF2025090091",
+      "vs": "2025090091",
+      "partnerId": 49,
+      "issueDate": "2025-07-24",
+      "deliveryDate": "2025-07-24",
+      "dueDate": "2025-08-07",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 55,
+          "vat": 0
+        }
+      ],
+      "total": 55,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 10,
+      "type": "INO",
+      "number": "VF2025070088",
+      "vs": "2025070088",
+      "partnerId": 34,
+      "issueDate": "2025-07-24",
+      "deliveryDate": "2025-07-24",
+      "dueDate": "2025-08-07",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 100,
+          "vat": 0
+        }
+      ],
+      "total": 100,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 11,
+      "type": "INO",
+      "number": "VF2025070090",
+      "vs": "2025070090",
+      "partnerId": 5,
+      "issueDate": "2025-07-12",
+      "deliveryDate": "2025-07-12",
+      "dueDate": "2025-07-26",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 15,
+          "vat": 0
+        }
+      ],
+      "total": 15,
+      "paid": 15,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 12,
+      "type": "INO",
+      "number": "VF2025060087",
+      "vs": "2025060087",
+      "partnerId": 55,
+      "issueDate": "2025-06-12",
+      "deliveryDate": "2025-06-12",
+      "dueDate": "2025-06-26",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 192,
+          "vat": 0
+        }
+      ],
+      "total": 192,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 13,
+      "type": "INO",
+      "number": "VF2025010086",
+      "vs": "2025010086",
+      "partnerId": 22,
+      "issueDate": "2025-01-19",
+      "deliveryDate": "2025-01-19",
+      "dueDate": "2025-02-02",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 300,
+          "vat": 0
+        }
+      ],
+      "total": 300,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 14,
+      "type": "INO",
+      "number": "VF2024120085",
+      "vs": "2024120085",
+      "partnerId": 46,
+      "issueDate": "2024-12-19",
+      "deliveryDate": "2024-12-19",
+      "dueDate": "2025-01-02",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 472,
+          "vat": 0
+        }
+      ],
+      "total": 472,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 15,
+      "type": "INO",
+      "number": "VF2024110084",
+      "vs": "2024110084",
+      "partnerId": 41,
+      "issueDate": "2024-11-12",
+      "deliveryDate": "2024-11-12",
+      "dueDate": "2024-11-26",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 32.08,
+          "vat": 0
+        }
+      ],
+      "total": 32.08,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 16,
+      "type": "INO",
+      "number": "VF2024110083",
+      "vs": "2024110083",
+      "partnerId": 43,
+      "issueDate": "2024-11-12",
+      "deliveryDate": "2024-11-12",
+      "dueDate": "2024-11-26",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 31,
+          "vat": 0
+        }
+      ],
+      "total": 31,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 17,
+      "type": "INO",
+      "number": "VF2024100082",
+      "vs": "2024100082",
+      "partnerId": 46,
+      "issueDate": "2024-11-12",
+      "deliveryDate": "2024-11-12",
+      "dueDate": "2024-11-26",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 466.26,
+          "vat": 0
+        }
+      ],
+      "total": 466.26,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 18,
+      "type": "INO",
+      "number": "VF2024090081",
+      "vs": "2024090081",
+      "partnerId": 44,
+      "issueDate": "2024-09-24",
+      "deliveryDate": "2024-09-24",
+      "dueDate": "2024-10-08",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 32.78,
+          "vat": 0
+        }
+      ],
+      "total": 32.78,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 19,
+      "type": "INO",
+      "number": "VF2024080080",
+      "vs": "2024080080",
+      "partnerId": 42,
+      "issueDate": "2024-08-29",
+      "deliveryDate": "2024-08-29",
+      "dueDate": "2024-09-12",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 190,
+          "vat": 0
+        }
+      ],
+      "total": 190,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 20,
+      "type": "INO",
+      "number": "VF2024070079",
+      "vs": "2024070079",
+      "partnerId": 43,
+      "issueDate": "2024-07-28",
+      "deliveryDate": "2024-07-28",
+      "dueDate": "2024-08-11",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 29.22,
+          "vat": 0
+        }
+      ],
+      "total": 29.22,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 21,
+      "type": "INO",
+      "number": "VF2024070078",
+      "vs": "2024070078",
+      "partnerId": 41,
+      "issueDate": "2024-07-24",
+      "deliveryDate": "2024-07-24",
+      "dueDate": "2024-08-07",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 106.8,
+          "vat": 0
+        }
+      ],
+      "total": 106.8,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 22,
+      "type": "INO",
+      "number": "VF2024070077",
+      "vs": "2024070077",
+      "partnerId": 41,
+      "issueDate": "2024-07-24",
+      "deliveryDate": "2024-07-24",
+      "dueDate": "2024-08-07",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 151.83,
+          "vat": 0
+        }
+      ],
+      "total": 151.83,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 23,
+      "type": "INO",
+      "number": "VF2024070076",
+      "vs": "2024070076",
+      "partnerId": 41,
+      "issueDate": "2024-07-23",
+      "deliveryDate": "2024-07-23",
+      "dueDate": "2024-08-06",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 104.58,
+          "vat": 0
+        }
+      ],
+      "total": 104.58,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 24,
+      "type": "INO",
+      "number": "VF2024070075",
+      "vs": "2024070075",
+      "partnerId": 35,
+      "issueDate": "2024-07-09",
+      "deliveryDate": "2024-07-09",
+      "dueDate": "2024-07-23",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 348.6,
+          "vat": 0
+        }
+      ],
+      "total": 348.6,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 25,
+      "type": "INO",
+      "number": "VF2024060074",
+      "vs": "2024060074",
+      "partnerId": 40,
+      "issueDate": "2024-06-28",
+      "deliveryDate": "2024-06-28",
+      "dueDate": "2024-07-12",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 234.65,
+          "vat": 0
+        }
+      ],
+      "total": 234.65,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 26,
+      "type": "INO",
+      "number": "VF2024060073",
+      "vs": "2024060073",
+      "partnerId": 39,
+      "issueDate": "2024-06-18",
+      "deliveryDate": "2024-06-18",
+      "dueDate": "2024-07-02",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 69.3,
+          "vat": 0
+        }
+      ],
+      "total": 69.3,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 27,
+      "type": "INO",
+      "number": "VF2024060072",
+      "vs": "2024060072",
+      "partnerId": 22,
+      "issueDate": "2024-06-14",
+      "deliveryDate": "2024-06-14",
+      "dueDate": "2024-06-28",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 43.5,
+          "vat": 0
+        }
+      ],
+      "total": 43.5,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 28,
+      "type": "INO",
+      "number": "VF2024060071",
+      "vs": "2024060071",
+      "partnerId": 34,
+      "issueDate": "2024-06-12",
+      "deliveryDate": "2024-06-12",
+      "dueDate": "2024-06-26",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 60,
+          "vat": 0
+        }
+      ],
+      "total": 60,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 29,
+      "type": "INO",
+      "number": "VF2024060070",
+      "vs": "2024060070",
+      "partnerId": 39,
+      "issueDate": "2024-06-06",
+      "deliveryDate": "2024-06-06",
+      "dueDate": "2024-06-20",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 168.56,
+          "vat": 0
+        }
+      ],
+      "total": 168.56,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 30,
+      "type": "INO",
+      "number": "VF2024050069",
+      "vs": "2024050069",
+      "partnerId": 34,
+      "issueDate": "2024-05-22",
+      "deliveryDate": "2024-05-22",
+      "dueDate": "2024-06-05",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 28.95,
+          "vat": 0
+        }
+      ],
+      "total": 28.95,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 31,
+      "type": "INO",
+      "number": "VF2024050068",
+      "vs": "2024050068",
+      "partnerId": 34,
+      "issueDate": "2024-05-15",
+      "deliveryDate": "2024-05-15",
+      "dueDate": "2024-05-29",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 38.05,
+          "vat": 0
+        }
+      ],
+      "total": 38.05,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 32,
+      "type": "INO",
+      "number": "VF2024050067",
+      "vs": "2024050067",
+      "partnerId": 9,
+      "issueDate": "2024-05-10",
+      "deliveryDate": "2024-05-10",
+      "dueDate": "2024-05-24",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 23.63,
+          "vat": 0
+        }
+      ],
+      "total": 23.63,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 33,
+      "type": "INO",
+      "number": "VF2024040066",
+      "vs": "2024040066",
+      "partnerId": 38,
+      "issueDate": "2024-04-23",
+      "deliveryDate": "2024-04-23",
+      "dueDate": "2024-05-07",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 215.18,
+          "vat": 0
+        }
+      ],
+      "total": 215.18,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 34,
+      "type": "INO",
+      "number": "VF2024030065",
+      "vs": "2024030065",
+      "partnerId": 34,
+      "issueDate": "2024-03-03",
+      "deliveryDate": "2024-03-03",
+      "dueDate": "2024-03-17",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 275,
+          "vat": 0
+        }
+      ],
+      "total": 275,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 35,
+      "type": "INO",
+      "number": "VF2024030064",
+      "vs": "2024030064",
+      "partnerId": 34,
+      "issueDate": "2024-03-03",
+      "deliveryDate": "2024-03-03",
+      "dueDate": "2024-03-17",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 98.73,
+          "vat": 0
+        }
+      ],
+      "total": 98.73,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 36,
+      "type": "INO",
+      "number": "VF2024020063",
+      "vs": "2024020063",
+      "partnerId": 17,
+      "issueDate": "2024-02-29",
+      "deliveryDate": "2024-02-29",
+      "dueDate": "2024-03-14",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 199,
+          "vat": 0
+        }
+      ],
+      "total": 199,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 37,
+      "type": "INO",
+      "number": "VF2024020062",
+      "vs": "2024020062",
+      "partnerId": 16,
+      "issueDate": "2024-02-29",
+      "deliveryDate": "2024-02-29",
+      "dueDate": "2024-03-14",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 216,
+          "vat": 0
+        }
+      ],
+      "total": 216,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 38,
+      "type": "INO",
+      "number": "VF2024020061",
+      "vs": "2024020061",
+      "partnerId": 23,
+      "issueDate": "2024-02-22",
+      "deliveryDate": "2024-02-22",
+      "dueDate": "2024-03-07",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 159.71,
+          "vat": 0
+        }
+      ],
+      "total": 159.71,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 39,
+      "type": "INO",
+      "number": "VF2024010060",
+      "vs": "2024010060",
+      "partnerId": 37,
+      "issueDate": "2024-01-18",
+      "deliveryDate": "2024-01-18",
+      "dueDate": "2024-02-01",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 340.28,
+          "vat": 0
+        }
+      ],
+      "total": 340.28,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 40,
+      "type": "INO",
+      "number": "VF2023120059",
+      "vs": "2023120059",
+      "partnerId": 36,
+      "issueDate": "2023-12-12",
+      "deliveryDate": "2023-12-12",
+      "dueDate": "2023-12-26",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 313.04,
+          "vat": 0
+        }
+      ],
+      "total": 313.04,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 41,
+      "type": "INO",
+      "number": "VF2023100058",
+      "vs": "2023100058",
+      "partnerId": 35,
+      "issueDate": "2023-10-26",
+      "deliveryDate": "2023-10-26",
+      "dueDate": "2023-11-09",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 694.63,
+          "vat": 0
+        }
+      ],
+      "total": 694.63,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 42,
+      "type": "INO",
+      "number": "VF2023100057",
+      "vs": "2023100057",
+      "partnerId": 34,
+      "issueDate": "2023-10-23",
+      "deliveryDate": "2023-10-23",
+      "dueDate": "2023-11-06",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 196,
+          "vat": 0
+        }
+      ],
+      "total": 196,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 43,
+      "type": "INO",
+      "number": "VF2023080056",
+      "vs": "2023080056",
+      "partnerId": 32,
+      "issueDate": "2023-08-18",
+      "deliveryDate": "2023-08-18",
+      "dueDate": "2023-09-01",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 80,
+          "vat": 0
+        }
+      ],
+      "total": 80,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 44,
+      "type": "INO",
+      "number": "VF2023050049",
+      "vs": "2023050049",
+      "partnerId": 28,
+      "issueDate": "2023-08-03",
+      "deliveryDate": "2023-08-03",
+      "dueDate": "2023-08-17",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 250,
+          "vat": 0
+        }
+      ],
+      "total": 250,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 45,
+      "type": "INO",
+      "number": "VF2023070055",
+      "vs": "2023070055",
+      "partnerId": 22,
+      "issueDate": "2023-07-26",
+      "deliveryDate": "2023-07-26",
+      "dueDate": "2023-08-09",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 179.94,
+          "vat": 0
+        }
+      ],
+      "total": 179.94,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 46,
+      "type": "INO",
+      "number": "VF2023070053",
+      "vs": "2023070053",
+      "partnerId": 49,
+      "issueDate": "2023-07-19",
+      "deliveryDate": "2023-07-19",
+      "dueDate": "2023-08-02",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 350,
+          "vat": 0
+        }
+      ],
+      "total": 350,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 47,
+      "type": "INO",
+      "number": "VF2023060054",
+      "vs": "2023060054",
+      "partnerId": 33,
+      "issueDate": "2023-06-22",
+      "deliveryDate": "2023-06-22",
+      "dueDate": "2023-07-06",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 282,
+          "vat": 0
+        }
+      ],
+      "total": 282,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 48,
+      "type": "INO",
+      "number": "VF2023050052",
+      "vs": "2023050052",
+      "partnerId": 32,
+      "issueDate": "2023-05-30",
+      "deliveryDate": "2023-05-30",
+      "dueDate": "2023-06-13",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 300,
+          "vat": 0
+        }
+      ],
+      "total": 300,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 49,
+      "type": "INO",
+      "number": "VF2023050051",
+      "vs": "2023050051",
+      "partnerId": 30,
+      "issueDate": "2023-05-28",
+      "deliveryDate": "2023-05-28",
+      "dueDate": "2023-06-11",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 480,
+          "vat": 0
+        }
+      ],
+      "total": 480,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 50,
+      "type": "INO",
+      "number": "VF2023050050",
+      "vs": "2023050050",
+      "partnerId": 30,
+      "issueDate": "2023-05-22",
+      "deliveryDate": "2023-05-22",
+      "dueDate": "2023-06-05",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 177.63,
+          "vat": 0
+        }
+      ],
+      "total": 177.63,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 51,
+      "type": "INO",
+      "number": "VF2023050048",
+      "vs": "2023050048",
+      "partnerId": 3,
+      "issueDate": "2023-05-05",
+      "deliveryDate": "2023-05-05",
+      "dueDate": "2023-05-19",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 177,
+          "vat": 0
+        }
+      ],
+      "total": 177,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 52,
+      "type": "INO",
+      "number": "VF2023040047",
+      "vs": "2023040047",
+      "partnerId": 30,
+      "issueDate": "2023-04-19",
+      "deliveryDate": "2023-04-19",
+      "dueDate": "2023-05-03",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 295.38,
+          "vat": 0
+        }
+      ],
+      "total": 295.38,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 53,
+      "type": "INO",
+      "number": "VF2023030046",
+      "vs": "2023030046",
+      "partnerId": 31,
+      "issueDate": "2023-03-16",
+      "deliveryDate": "2023-03-16",
+      "dueDate": "2023-03-30",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 300,
+          "vat": 0
+        }
+      ],
+      "total": 300,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 54,
+      "type": "INO",
+      "number": "VF2023010045",
+      "vs": "2023010045",
+      "partnerId": 30,
+      "issueDate": "2023-01-29",
+      "deliveryDate": "2023-01-29",
+      "dueDate": "2023-02-12",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 279,
+          "vat": 0
+        }
+      ],
+      "total": 279,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 55,
+      "type": "INO",
+      "number": "VF2023010044",
+      "vs": "2023010044",
+      "partnerId": 29,
+      "issueDate": "2023-01-17",
+      "deliveryDate": "2023-01-17",
+      "dueDate": "2023-01-31",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 88.67,
+          "vat": 0
+        }
+      ],
+      "total": 88.67,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 56,
+      "type": "INO",
+      "number": "VF2022110043",
+      "vs": "2022110043",
+      "partnerId": 28,
+      "issueDate": "2022-11-15",
+      "deliveryDate": "2022-11-15",
+      "dueDate": "2022-11-29",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 764.81,
+          "vat": 0
+        }
+      ],
+      "total": 764.81,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 57,
+      "type": "INO",
+      "number": "VF2022100042",
+      "vs": "2022100042",
+      "partnerId": 27,
+      "issueDate": "2022-10-15",
+      "deliveryDate": "2022-10-15",
+      "dueDate": "2022-10-29",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 389.48,
+          "vat": 0
+        }
+      ],
+      "total": 389.48,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 58,
+      "type": "INO",
+      "number": "VF2022070041",
+      "vs": "2022070041",
+      "partnerId": 26,
+      "issueDate": "2022-07-09",
+      "deliveryDate": "2022-07-09",
+      "dueDate": "2022-07-23",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 188.54,
+          "vat": 0
+        }
+      ],
+      "total": 188.54,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 59,
+      "type": "INO",
+      "number": "VF2018120040",
+      "vs": "2018120040",
+      "partnerId": 26,
+      "issueDate": "2022-07-09",
+      "deliveryDate": "2022-07-09",
+      "dueDate": "2022-07-23",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 477.46,
+          "vat": 0
+        }
+      ],
+      "total": 477.46,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 60,
+      "type": "INO",
+      "number": "VF2022050039",
+      "vs": "2022050039",
+      "partnerId": 9,
+      "issueDate": "2022-05-19",
+      "deliveryDate": "2022-05-19",
+      "dueDate": "2022-06-02",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 25.05,
+          "vat": 0
+        }
+      ],
+      "total": 25.05,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 61,
+      "type": "INO",
+      "number": "VF2022050038",
+      "vs": "2022050038",
+      "partnerId": 25,
+      "issueDate": "2022-05-19",
+      "deliveryDate": "2022-05-19",
+      "dueDate": "2022-06-02",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 90,
+          "vat": 0
+        }
+      ],
+      "total": 90,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 62,
+      "type": "INO",
+      "number": "VF2022050037",
+      "vs": "2022050037",
+      "partnerId": 24,
+      "issueDate": "2022-05-19",
+      "deliveryDate": "2022-05-19",
+      "dueDate": "2022-06-02",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 107.38,
+          "vat": 0
+        }
+      ],
+      "total": 107.38,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 63,
+      "type": "INO",
+      "number": "VF2021120036",
+      "vs": "2021120036",
+      "partnerId": 22,
+      "issueDate": "2021-12-31",
+      "deliveryDate": "2021-12-31",
+      "dueDate": "2022-01-14",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 229.3,
+          "vat": 0
+        }
+      ],
+      "total": 229.3,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 64,
+      "type": "INO",
+      "number": "VF2021090035",
+      "vs": "2021090035",
+      "partnerId": 22,
+      "issueDate": "2021-09-23",
+      "deliveryDate": "2021-09-23",
+      "dueDate": "2021-10-07",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 360,
+          "vat": 0
+        }
+      ],
+      "total": 360,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 65,
+      "type": "INO",
+      "number": "VF2021090034",
+      "vs": "2021090034",
+      "partnerId": 22,
+      "issueDate": "2021-09-23",
+      "deliveryDate": "2021-09-23",
+      "dueDate": "2021-10-07",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 200,
+          "vat": 0
+        }
+      ],
+      "total": 200,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 66,
+      "type": "INO",
+      "number": "VF2021090033",
+      "vs": "2021090033",
+      "partnerId": 23,
+      "issueDate": "2021-09-03",
+      "deliveryDate": "2021-09-03",
+      "dueDate": "2021-09-17",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 95.4,
+          "vat": 0
+        }
+      ],
+      "total": 95.4,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 67,
+      "type": "INO",
+      "number": "VF2021080032",
+      "vs": "2021080032",
+      "partnerId": 22,
+      "issueDate": "2021-08-26",
+      "deliveryDate": "2021-08-26",
+      "dueDate": "2021-09-09",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 330,
+          "vat": 0
+        }
+      ],
+      "total": 330,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 68,
+      "type": "INO",
+      "number": "VF2021080031",
+      "vs": "2021080031",
+      "partnerId": 22,
+      "issueDate": "2021-08-26",
+      "deliveryDate": "2021-08-26",
+      "dueDate": "2021-09-09",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 600,
+          "vat": 0
+        }
+      ],
+      "total": 600,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 69,
+      "type": "INO",
+      "number": "VF2021080030",
+      "vs": "2021080030",
+      "partnerId": 13,
+      "issueDate": "2021-08-25",
+      "deliveryDate": "2021-08-25",
+      "dueDate": "2021-09-08",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 600,
+          "vat": 0
+        }
+      ],
+      "total": 600,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 70,
+      "type": "INO",
+      "number": "VF2020090029",
+      "vs": "2020090029",
+      "partnerId": 49,
+      "issueDate": "2020-09-16",
+      "deliveryDate": "2020-09-16",
+      "dueDate": "2020-09-30",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 946,
+          "vat": 0
+        }
+      ],
+      "total": 946,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 71,
+      "type": "INO",
+      "number": "VF2020090028",
+      "vs": "2020090028",
+      "partnerId": 6,
+      "issueDate": "2020-09-04",
+      "deliveryDate": "2020-09-04",
+      "dueDate": "2020-09-18",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 373.51,
+          "vat": 0
+        }
+      ],
+      "total": 373.51,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 72,
+      "type": "INO",
+      "number": "VF2020070027",
+      "vs": "2020070027",
+      "partnerId": 6,
+      "issueDate": "2020-07-08",
+      "deliveryDate": "2020-07-08",
+      "dueDate": "2020-07-22",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 211.45,
+          "vat": 0
+        }
+      ],
+      "total": 211.45,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 73,
+      "type": "INO",
+      "number": "VF2020020026",
+      "vs": "2020020026",
+      "partnerId": 10,
+      "issueDate": "2020-02-20",
+      "deliveryDate": "2020-02-20",
+      "dueDate": "2020-03-05",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 28.97,
+          "vat": 0
+        }
+      ],
+      "total": 28.97,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 74,
+      "type": "INO",
+      "number": "VF2020020025",
+      "vs": "2020020025",
+      "partnerId": 20,
+      "issueDate": "2020-02-20",
+      "deliveryDate": "2020-02-20",
+      "dueDate": "2020-03-05",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 13.9,
+          "vat": 0
+        }
+      ],
+      "total": 13.9,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 75,
+      "type": "INO",
+      "number": "VF2020020024",
+      "vs": "2020020024",
+      "partnerId": 49,
+      "issueDate": "2020-02-12",
+      "deliveryDate": "2020-02-12",
+      "dueDate": "2020-02-26",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 400,
+          "vat": 0
+        }
+      ],
+      "total": 400,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 76,
+      "type": "INO",
+      "number": "VF2020020023",
+      "vs": "2020020023",
+      "partnerId": 19,
+      "issueDate": "2020-02-10",
+      "deliveryDate": "2020-02-10",
+      "dueDate": "2020-02-24",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 140,
+          "vat": 0
+        }
+      ],
+      "total": 140,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 77,
+      "type": "INO",
+      "number": "VF2020010022",
+      "vs": "2020010022",
+      "partnerId": 18,
+      "issueDate": "2020-01-31",
+      "deliveryDate": "2020-01-31",
+      "dueDate": "2020-02-14",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 40.32,
+          "vat": 0
+        }
+      ],
+      "total": 40.32,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 78,
+      "type": "INO",
+      "number": "VF2020010021",
+      "vs": "2020010021",
+      "partnerId": 3,
+      "issueDate": "2020-01-23",
+      "deliveryDate": "2020-01-23",
+      "dueDate": "2020-02-06",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 210,
+          "vat": 0
+        }
+      ],
+      "total": 210,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 79,
+      "type": "INO",
+      "number": "VF2019120018",
+      "vs": "2019120018",
+      "partnerId": 15,
+      "issueDate": "2019-12-12",
+      "deliveryDate": "2019-12-12",
+      "dueDate": "2019-12-26",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 91.96,
+          "vat": 0
+        }
+      ],
+      "total": 91.96,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 80,
+      "type": "INO",
+      "number": "VF2019120020",
+      "vs": "2019120020",
+      "partnerId": 17,
+      "issueDate": "2019-12-06",
+      "deliveryDate": "2019-12-06",
+      "dueDate": "2019-12-20",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 106.51,
+          "vat": 0
+        }
+      ],
+      "total": 106.51,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 81,
+      "type": "INO",
+      "number": "VF2019120019",
+      "vs": "2019120019",
+      "partnerId": 16,
+      "issueDate": "2019-12-06",
+      "deliveryDate": "2019-12-06",
+      "dueDate": "2019-12-20",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 106.08,
+          "vat": 0
+        }
+      ],
+      "total": 106.08,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 82,
+      "type": "INO",
+      "number": "VF2019120017",
+      "vs": "2019120017",
+      "partnerId": 14,
+      "issueDate": "2019-12-06",
+      "deliveryDate": "2019-12-06",
+      "dueDate": "2019-12-20",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 69.77,
+          "vat": 0
+        }
+      ],
+      "total": 69.77,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 83,
+      "type": "INO",
+      "number": "VF2019110016",
+      "vs": "2019110016",
+      "partnerId": 13,
+      "issueDate": "2019-11-11",
+      "deliveryDate": "2019-11-11",
+      "dueDate": "2019-11-25",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 560,
+          "vat": 0
+        }
+      ],
+      "total": 560,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 84,
+      "type": "INO",
+      "number": "VF2019080015",
+      "vs": "2019080015",
+      "partnerId": 12,
+      "issueDate": "2019-08-15",
+      "deliveryDate": "2019-08-15",
+      "dueDate": "2019-08-29",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 19.18,
+          "vat": 0
+        }
+      ],
+      "total": 19.18,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 85,
+      "type": "INO",
+      "number": "VF2019070014",
+      "vs": "2019070014",
+      "partnerId": 21,
+      "issueDate": "2019-08-08",
+      "deliveryDate": "2019-08-08",
+      "dueDate": "2019-08-22",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 70,
+          "vat": 0
+        }
+      ],
+      "total": 70,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 86,
+      "type": "INO",
+      "number": "VF2019070013",
+      "vs": "2019070013",
+      "partnerId": 11,
+      "issueDate": "2019-07-01",
+      "deliveryDate": "2019-07-01",
+      "dueDate": "2019-07-15",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 132.8,
+          "vat": 0
+        }
+      ],
+      "total": 132.8,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 87,
+      "type": "INO",
+      "number": "VF2019050012",
+      "vs": "2019050012",
+      "partnerId": 10,
+      "issueDate": "2019-05-30",
+      "deliveryDate": "2019-05-30",
+      "dueDate": "2019-06-13",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 134.13,
+          "vat": 0
+        }
+      ],
+      "total": 134.13,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 88,
+      "type": "INO",
+      "number": "VF2019050011",
+      "vs": "2019050011",
+      "partnerId": 9,
+      "issueDate": "2019-05-26",
+      "deliveryDate": "2019-05-26",
+      "dueDate": "2019-06-09",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 9.04,
+          "vat": 0
+        }
+      ],
+      "total": 9.04,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 89,
+      "type": "INO",
+      "number": "VF2019050010",
+      "vs": "2019050010",
+      "partnerId": 8,
+      "issueDate": "2019-05-17",
+      "deliveryDate": "2019-05-17",
+      "dueDate": "2019-05-31",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 37.03,
+          "vat": 0
+        }
+      ],
+      "total": 37.03,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 90,
+      "type": "INO",
+      "number": "VF2019050009",
+      "vs": "2019050009",
+      "partnerId": 3,
+      "issueDate": "2019-05-03",
+      "deliveryDate": "2019-05-03",
+      "dueDate": "2019-05-17",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 281,
+          "vat": 0
+        }
+      ],
+      "total": 281,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 91,
+      "type": "INO",
+      "number": "VF2019040008",
+      "vs": "2019040008",
+      "partnerId": 7,
+      "issueDate": "2019-04-16",
+      "deliveryDate": "2019-04-16",
+      "dueDate": "2019-04-30",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 60.36,
+          "vat": 0
+        }
+      ],
+      "total": 60.36,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 92,
+      "type": "INO",
+      "number": "VF2019030007",
+      "vs": "2019030007",
+      "partnerId": 6,
+      "issueDate": "2019-03-11",
+      "deliveryDate": "2019-03-11",
+      "dueDate": "2019-03-25",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 111.02,
+          "vat": 0
+        }
+      ],
+      "total": 111.02,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 93,
+      "type": "INO",
+      "number": "VF2019030006",
+      "vs": "2019030006",
+      "partnerId": 3,
+      "issueDate": "2019-03-02",
+      "deliveryDate": "2019-03-02",
+      "dueDate": "2019-03-16",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 135,
+          "vat": 0
+        }
+      ],
+      "total": 135,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 94,
+      "type": "INO",
+      "number": "VF2019020005",
+      "vs": "2019020005",
+      "partnerId": 5,
+      "issueDate": "2019-02-28",
+      "deliveryDate": "2019-02-28",
+      "dueDate": "2019-03-14",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 135,
+          "vat": 0
+        }
+      ],
+      "total": 135,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 95,
+      "type": "INO",
+      "number": "VF2019020004",
+      "vs": "2019020004",
+      "partnerId": 4,
+      "issueDate": "2019-02-19",
+      "deliveryDate": "2019-02-19",
+      "dueDate": "2019-03-05",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 20.79,
+          "vat": 0
+        }
+      ],
+      "total": 20.79,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 96,
+      "type": "INO",
+      "number": "VF2018120087",
+      "vs": "2018120087",
+      "partnerId": 24,
+      "issueDate": "2018-12-31",
+      "deliveryDate": "2018-12-31",
+      "dueDate": "2019-01-14",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 0,
+          "vat": 0
+        }
+      ],
+      "total": 0,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 97,
+      "type": "INO",
+      "number": "VF2018120003",
+      "vs": "2018120003",
+      "partnerId": 3,
+      "issueDate": "2018-12-20",
+      "deliveryDate": "2018-12-20",
+      "dueDate": "2019-01-03",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 247,
+          "vat": 0
+        }
+      ],
+      "total": 247,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 98,
+      "type": "INO",
+      "number": "VF2018120002",
+      "vs": "2018120002",
+      "partnerId": 2,
+      "issueDate": "2018-12-03",
+      "deliveryDate": "2018-12-03",
+      "dueDate": "2018-12-17",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 110,
+          "vat": 0
+        }
+      ],
+      "total": 110,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    },
+    {
+      "id": 99,
+      "type": "INO",
+      "number": "VF2018110001",
+      "vs": "2018110001",
+      "partnerId": 49,
+      "issueDate": "2018-11-30",
+      "deliveryDate": "2018-11-30",
+      "dueDate": "2018-12-14",
+      "currency": "EUR",
+      "items": [
+        {
+          "name": "Fakturované služby",
+          "qty": 1,
+          "unit": "ks",
+          "price": 300,
+          "vat": 0
+        }
+      ],
+      "total": 300,
+      "paid": 0,
+      "note": "Import z keepi.eu (2026-07-10)"
+    }
+  ],
+  "cashboxes": [
+    {
+      "id": 1,
+      "name": "Hlavná pokladňa",
+      "initial": 0
+    }
+  ],
+  "cashdocs": [],
+  "bankaccounts": [
+    {
+      "id": 1,
+      "name": "Podnikateľský účet",
+      "iban": "",
+      "initial": 0
+    }
+  ],
+  "bankmoves": [],
+  "products": [],
+  "stockmoves": [],
+  "orders": [
+    {
+      "id": 1,
+      "number": "OB2025000001",
+      "date": "2025-12-27",
+      "partnerId": 52,
+      "subject": "Hudobná produkcia a technické zabezpečenie - 31.12.2025 / prevádzka Maják Senec",
+      "total": 800,
+      "state": "potvrdená",
+      "note": "Zákaznícke č.: 31.12.2025"
+    }
+  ],
+  "seq": {
+    "VF2026": 98,
+    "VF2025": 94,
+    "VF2024": 85,
+    "VF2023": 59,
+    "VF2022": 43,
+    "VF2018": 87,
+    "VF2021": 36,
+    "VF2020": 29,
+    "VF2019": 20,
+    "OBJ2025": 1
+  }
+}

@@ -8,6 +8,7 @@ const path = require('path');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
+const SEED_FILE = path.join(DATA_DIR, 'seed.json');
 const KEY = process.env.KV_KEY || 'ucto-erp:db';
 
 // akceptujeme viac možných názvov premenných (Vercel KV aj Upstash Marketplace)
@@ -53,4 +54,14 @@ async function writeRaw(obj) {
   fs.writeFileSync(DB_FILE, JSON.stringify(obj, null, 2), 'utf8');
 }
 
-module.exports = { readRaw, writeRaw, usingKV, KEY };
+/* počiatočné dáta (nasadené v repozitári) — použijú sa, keď je úložisko prázdne */
+function readSeed() {
+  try {
+    if (fs.existsSync(SEED_FILE)) return JSON.parse(fs.readFileSync(SEED_FILE, 'utf8'));
+  } catch (e) {
+    console.error('Nepodarilo sa načítať seed.json:', e.message);
+  }
+  return null;
+}
+
+module.exports = { readRaw, writeRaw, readSeed, usingKV, KEY };
