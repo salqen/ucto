@@ -1,0 +1,17 @@
+{
+  "name": "ucto-erp",
+  "version": "1.0.0",
+  "description": "Jednoduché účtovníctvo - ERP systém (faktúry, peňažný denník, pokladňa, banka, partneri, sklad, objednávky, uzávierka)",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "build": "cd client && npm install && npm run build"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "@upstash/redis": "^1.34.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,319 @@
+/* účtoERP - server (Express + KV/JSON databáza) */
+const express = require('express');
+const path = require('path');
+const store = require('./store');
+
+const PORT = process.env.PORT || 3000;
+
+/* ---------- databáza ---------- */
+const DEFAULT_DB = {
+  settings: {
+    company: { name: 'Moja firma s.r.o.', ico: '12345678', dic: '2020123456', icdph: 'SK2020123456', street: 'Hlavná 1', city: 'Bratislava', zip: '811 01', iban: 'SK89 0900 0000 0001 2345 6789', phone: '', email: '' },
+    year: new Date().getFullYear()
+  },
+  partners: [],
+  invoices: [],
+  cashboxes: [{ id: 1, name: 'Hlavná pokladňa', initial: 0 }],
+  cashdocs: [],
+  bankaccounts: [{ id: 1, name: 'Podnikateľský účet', iban: 'SK89 0900 0000 0001 2345 6789', initial: 0 }],
+  bankmoves: [],
+  products: [],
+  stockmoves: [],
+  orders: [],
+  seq: {}
+};
+
+let db;
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+async function ensureDb() {
+  const raw = await store.readRaw();
+  if (raw && typeof raw === 'object') {
+    db = raw;
+    for (const k of Object.keys(DEFAULT_DB)) if (db[k] === undefined) db[k] = clone(DEFAULT_DB[k]);
+  } else {
+    db = clone(DEFAULT_DB);
+    await store.writeRaw(db);
+  }
+}
+async function saveDb() {
+  await store.writeRaw(db);
+}
+function nextId(coll) {
+  return db[coll].reduce((m, r) => Math.max(m, r.id || 0), 0) + 1;
+}
+function nextNumber(prefix, date) {
+  const d = date ? new Date(date) : new Date();
+  const ym = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const key = `${prefix}${d.getFullYear()}`;
+  db.seq[key] = (db.seq[key] || 0) + 1;
+  return `${prefix}${ym}${String(db.seq[key]).padStart(4, '0')}`;
+}
+
+/* ---------- kategórie peňažného denníka (JÚ) ---------- */
+const CATEGORIES = {
+  P: [
+    { code: 'PT', name: 'Predaj tovaru', tax: true },
+    { code: 'PS', name: 'Predaj výrobkov a služieb', tax: true },
+    { code: 'OP', name: 'Ostatné príjmy', tax: true },
+    { code: 'DPHP', name: 'DPH prijatá', tax: false },
+    { code: 'VP', name: 'Vklad podnikateľa', tax: false },
+    { code: 'UP', name: 'Úhrada pohľadávky', tax: true }
+  ],
+  V: [
+    { code: 'NM', name: 'Nákup materiálu', tax: true },
+    { code: 'NT', name: 'Nákup tovaru', tax: true },
+    { code: 'MZ', name: 'Mzdy', tax: true },
+    { code: 'PO', name: 'Poistné a odvody', tax: true },
+    { code: 'PR', name: 'Prevádzková réžia', tax: true },
+    { code: 'OV', name: 'Ostatné výdavky', tax: true },
+    { code: 'DPHZ', name: 'DPH zaplatená', tax: false },
+    { code: 'OS', name: 'Osobná spotreba', tax: false }
+  ]
+};
+function catName(type, code) {
+  const c = (CATEGORIES[type] || []).find(c => c.code === code);
+  return c ? c.name : code || '';
+}
+
+/* ---------- pomocné ---------- */
+function invoiceTotal(inv) {
+  return (inv.items || []).reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.price) || 0) * (1 + (Number(it.vat) || 0) / 100), 0);
+}
+function round2(n) { return Math.round(n * 100) / 100; }
+
+/* ---------- app ---------- */
+const app = express();
+app.use(express.json({ limit: '5mb' }));
+
+/* načítaj databázu pred každou API požiadavkou (KV je zdieľaná medzi inštanciami) */
+app.use('/api', async (req, res, next) => {
+  try { await ensureDb(); next(); } catch (e) { next(e); }
+});
+
+const COLLECTIONS =['partners', 'invoices', 'cashboxes', 'cashdocs', 'bankaccounts', 'bankmoves', 'products', 'stockmoves', 'orders'];
+
+/* číselníky */
+app.get('/api/categories', (req, res) => res.json(CATEGORIES));
+
+/* nastavenia */
+app.get('/api/settings', (req, res) => res.json(db.settings));
+app.put('/api/settings', async (req, res) => {
+  db.settings = { ...db.settings, ...req.body };
+  await saveDb();
+  res.json(db.settings);
+});
+
+/* dashboard */
+app.get('/api/dashboard', (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const out = db.invoices.filter(i => i.type === 'INO');
+  const inc = db.invoices.filter(i => i.type === 'INI');
+  const unpaidOut = out.filter(i => round2(i.total - (i.paid || 0)) > 0);
+  const overdueOut = unpaidOut.filter(i => i.dueDate && i.dueDate < today);
+  const unpaidInc = inc.filter(i => round2(i.total - (i.paid || 0)) > 0);
+  const cashBal = db.cashboxes.reduce((s, cb) => s + Number(cb.initial || 0), 0)
+    + db.cashdocs.reduce((s, d) => s + (d.type === 'P' ? 1 : -1) * Number(d.amount || 0), 0);
+  const bankBal = db.bankaccounts.reduce((s, a) => s + Number(a.initial || 0), 0)
+    + db.bankmoves.reduce((s, d) => s + (d.type === 'P' ? 1 : -1) * Number(d.amount || 0), 0);
+  const income = db.cashdocs.filter(d => d.type === 'P').reduce((s, d) => s + Number(d.amount || 0), 0)
+    + db.bankmoves.filter(d => d.type === 'P').reduce((s, d) => s + Number(d.amount || 0), 0);
+  const expense = db.cashdocs.filter(d => d.type === 'V').reduce((s, d) => s + Number(d.amount || 0), 0)
+    + db.bankmoves.filter(d => d.type === 'V').reduce((s, d) => s + Number(d.amount || 0), 0);
+  const stockValue = stockState().reduce((s, r) => s + r.value, 0);
+  const iOwe = round2(unpaidInc.reduce((s, i) => s + (i.total - (i.paid || 0)), 0));
+  const oweMe = round2(unpaidOut.reduce((s, i) => s + (i.total - (i.paid || 0)), 0));
+  const lastDocs = [...db.invoices].sort((a, b) => (b.issueDate || '').localeCompare(a.issueDate || '')).slice(0, 5)
+    .map(i => ({ number: i.number, type: i.type, total: i.total }));
+  res.json({
+    overdueCount: overdueOut.length,
+    overdueSum: round2(overdueOut.reduce((s, i) => s + (i.total - (i.paid || 0)), 0)),
+    incomingCount: unpaidInc.length,
+    incomingSum: iOwe,
+    iOwe, oweMe,
+    income: round2(income), expense: round2(expense),
+    cashBal: round2(cashBal), bankBal: round2(bankBal),
+    stockValue: round2(stockValue),
+    profit: round2(income - expense),
+    money: round2(cashBal + bankBal),
+    lastDocs,
+    partnersCount: db.partners.length
+  });
+});
+
+/* peňažný denník - odvodený z pokladne a banky */
+app.get('/api/diary', (req, res) => {
+  const year = req.query.year;
+  let rows = [];
+  for (const d of db.cashdocs) rows.push({ src: 'POK', srcName: (db.cashboxes.find(c => c.id === d.cashboxId) || {}).name || 'Pokladňa', ...d });
+  for (const d of db.bankmoves) rows.push({ src: 'BAN', srcName: (db.bankaccounts.find(a => a.id === d.accountId) || {}).name || 'Banka', ...d });
+  if (year) rows = rows.filter(r => (r.date || '').startsWith(String(year)));
+  rows.sort((a, b) => (a.date || '').localeCompare(b.date || '') || String(a.number).localeCompare(String(b.number)));
+  let bal = 0;
+  const start = db.cashboxes.reduce((s, c) => s + Number(c.initial || 0), 0) + db.bankaccounts.reduce((s, a) => s + Number(a.initial || 0), 0);
+  bal = start;
+  rows = rows.map(r => {
+    bal += (r.type === 'P' ? 1 : -1) * Number(r.amount || 0);
+    return { ...r, categoryName: catName(r.type, r.category), partnerName: (db.partners.find(p => p.id === r.partnerId) || {}).name || '', balance: round2(bal) };
+  });
+  res.json({ initial: round2(start), rows });
+});
+
+/* uzávierka */
+app.get('/api/closing', (req, res) => {
+  const year = String(req.query.year || db.settings.year);
+  const all = [...db.cashdocs, ...db.bankmoves].filter(d => (d.date || '').startsWith(year));
+  const sum = list => round2(list.reduce((s, d) => s + Number(d.amount || 0), 0));
+  const byCat = {};
+  for (const t of ['P', 'V']) {
+    byCat[t] = CATEGORIES[t].map(c => ({
+      ...c,
+      sum: sum(all.filter(d => d.type === t && d.category === c.code))
+    }));
+    const other = all.filter(d => d.type === t && !CATEGORIES[t].some(c => c.code === d.category));
+    if (other.length) byCat[t].push({ code: '??', name: 'Nezaradené', tax: true, sum: sum(other) });
+  }
+  const incomeTax = byCat.P.filter(c => c.tax).reduce((s, c) => s + c.sum, 0);
+  const expenseTax = byCat.V.filter(c => c.tax).reduce((s, c) => s + c.sum, 0);
+  res.json({
+    year,
+    income: byCat.P, expense: byCat.V,
+    incomeTotal: sum(all.filter(d => d.type === 'P')),
+    expenseTotal: sum(all.filter(d => d.type === 'V')),
+    incomeTax: round2(incomeTax), expenseTax: round2(expenseTax),
+    profit: round2(incomeTax - expenseTax)
+  });
+});
+
+/* manažérske informácie - mesačné súčty */
+app.get('/api/manager', (req, res) => {
+  const year = String(req.query.year || db.settings.year);
+  const all = [...db.cashdocs, ...db.bankmoves].filter(d => (d.date || '').startsWith(year));
+  const months = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, income: 0, expense: 0 }));
+  for (const d of all) {
+    const m = Number((d.date || '').slice(5, 7));
+    if (m >= 1 && m <= 12) months[m - 1][d.type === 'P' ? 'income' : 'expense'] += Number(d.amount || 0);
+  }
+  months.forEach(m => { m.income = round2(m.income); m.expense = round2(m.expense); m.profit = round2(m.income - m.expense); });
+  res.json({ year, months });
+});
+
+/* stav zásob */
+function stockState() {
+  return db.products.map(p => {
+    const moves = db.stockmoves.filter(m => m.productId === p.id);
+    const inQty = moves.filter(m => m.type === 'P').reduce((s, m) => s + Number(m.qty || 0), 0);
+    const outQty = moves.filter(m => m.type === 'V').reduce((s, m) => s + Number(m.qty || 0), 0);
+    const inVal = moves.filter(m => m.type === 'P').reduce((s, m) => s + Number(m.qty || 0) * Number(m.price || 0), 0);
+    const avg = inQty > 0 ? inVal / inQty : Number(p.price || 0);
+    const qty = round2(inQty - outQty);
+    return { ...p, qty, avgPrice: round2(avg), value: round2(qty * avg) };
+  });
+}
+app.get('/api/stock', (req, res) => res.json(stockState()));
+
+/* úhrada faktúry -> vytvorí doklad v pokladni alebo banke */
+app.post('/api/invoices/:id/pay', async (req, res) => {
+  const inv = db.invoices.find(i => i.id === Number(req.params.id));
+  if (!inv) return res.status(404).json({ error: 'Faktúra neexistuje' });
+  const { method, amount, date, cashboxId, accountId } = req.body; // method: 'cash' | 'bank'
+  const amt = round2(Number(amount) || (inv.total - (inv.paid || 0)));
+  const isOut = inv.type === 'INO'; // vyšlá faktúra -> príjem
+  const docType = isOut ? 'P' : 'V';
+  const category = isOut ? 'UP' : 'OV';
+  const text = `Úhrada faktúry ${inv.number}`;
+  if (method === 'cash') {
+    const doc = {
+      id: nextId('cashdocs'), cashboxId: Number(cashboxId) || db.cashboxes[0].id, type: docType,
+      number: nextNumber(docType === 'P' ? 'PPD' : 'VPD', date), date: date || new Date().toISOString().slice(0, 10),
+      partnerId: inv.partnerId, text, category, amount: amt, invoiceId: inv.id
+    };
+    db.cashdocs.push(doc);
+  } else {
+    const doc = {
+      id: nextId('bankmoves'), accountId: Number(accountId) || db.bankaccounts[0].id, type: docType,
+      number: nextNumber('BV', date), date: date || new Date().toISOString().slice(0, 10),
+      partnerId: inv.partnerId, text, category, amount: amt, invoiceId: inv.id, vs: inv.vs
+    };
+    db.bankmoves.push(doc);
+  }
+  inv.paid = round2((inv.paid || 0) + amt);
+  await saveDb();
+  res.json(inv);
+});
+
+/* generické CRUD */
+app.get('/api/:coll', (req, res, next) => {
+  const { coll } = req.params;
+  if (!COLLECTIONS.includes(coll)) return next();
+  let rows = db[coll];
+  if (coll === 'invoices' && req.query.type) rows = rows.filter(r => r.type === req.query.type);
+  if (req.query.year) rows = rows.filter(r => ((r.issueDate || r.date || '')).startsWith(String(req.query.year)));
+  /* doplň mená partnerov */
+  rows = rows.map(r => ({ ...r, partnerName: r.partnerId ? ((db.partners.find(p => p.id === r.partnerId) || {}).name || '') : r.partnerName }));
+  res.json(rows);
+});
+
+app.post('/api/:coll', async (req, res, next) => {
+  const { coll } = req.params;
+  if (!COLLECTIONS.includes(coll)) return next();
+  const row = { ...req.body, id: nextId(coll) };
+  /* automatické číslovanie */
+  if (!row.number) {
+    if (coll === 'invoices') row.number = nextNumber(row.type === 'INI' ? 'DF' : 'VF', row.issueDate);
+    if (coll === 'cashdocs') row.number = nextNumber(row.type === 'P' ? 'PPD' : 'VPD', row.date);
+    if (coll === 'bankmoves') row.number = nextNumber('BV', row.date);
+    if (coll === 'stockmoves') row.number = nextNumber(row.type === 'P' ? 'PRI' : 'VYD', row.date);
+    if (coll === 'orders') row.number = nextNumber('OBJ', row.date);
+  }
+  if (coll === 'invoices') {
+    if (!row.vs) row.vs = String(row.number || '').replace(/\D/g, '');
+    row.total = round2(invoiceTotal(row));
+    row.paid = row.paid || 0;
+  }
+  db[coll].push(row);
+  await saveDb();
+  res.json(row);
+});
+
+app.put('/api/:coll/:id', async (req, res, next) => {
+  const { coll } = req.params;
+  if (!COLLECTIONS.includes(coll)) return next();
+  const idx = db[coll].findIndex(r => r.id === Number(req.params.id));
+  if (idx < 0) return res.status(404).json({ error: 'Záznam neexistuje' });
+  const row = { ...db[coll][idx], ...req.body, id: db[coll][idx].id };
+  if (coll === 'invoices') row.total = round2(invoiceTotal(row));
+  db[coll][idx] = row;
+  await saveDb();
+  res.json(row);
+});
+
+app.delete('/api/:coll/:id', async (req, res, next) => {
+  const { coll } = req.params;
+  if (!COLLECTIONS.includes(coll)) return next();
+  db[coll] = db[coll].filter(r => r.id !== Number(req.params.id));
+  await saveDb();
+  res.json({ ok: true });
+});
+
+/* statický frontend */
+const DIST = path.join(__dirname, '..', 'client', 'dist');
+app.use(express.static(DIST));
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Neznáma API cesta' });
+  res.sendFile(path.join(DIST, 'index.html'));
+});
+
+/* spracovanie chýb (napr. výpadok KV) */
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ error: String((err && err.message) || err) });
+});
+
+/* lokálne spustenie (na Verceli sa app iba exportuje ako handler) */
+if (require.main === module) {
+  ensureDb()
+    .then(() => app.listen(PORT, () => console.log(`účtoERP beží na http://localhost:${PORT}`)))
+    .catch(e => { console.error('Chyba pri štarte:', e); process.exit(1); });
+}
+
+module.exports = app;

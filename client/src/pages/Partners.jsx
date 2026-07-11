@@ -1,0 +1,85 @@
+import React, { useEffect, useState } from 'react';
+import { api } from '../api.js';
+import { PageHead, Modal, Frow } from '../components/ui.jsx';
+
+const empty = { name: '', ico: '', dic: '', icdph: '', street: '', city: '', zip: '', country: 'Slovensko', email: '', phone: '', iban: '' };
+
+export default function Partners() {
+  const [rows, setRows] = useState([]);
+  const [filter, setFilter] = useState('');
+  const [edit, setEdit] = useState(null);
+  const [sel, setSel] = useState(null);
+  const load = () => api.get('/partners').then(setRows);
+  useEffect(() => { load(); }, []);
+
+  const save = async (e) => {
+    e.preventDefault();
+    if (edit.id) await api.put('/partners/' + edit.id, edit);
+    else await api.post('/partners', edit);
+    setEdit(null); load();
+  };
+  const del = async () => {
+    if (!sel || !confirm(`Zmazať partnera ${sel.name}?`)) return;
+    await api.del('/partners/' + sel.id); setSel(null); load();
+  };
+
+  const shown = rows.filter(r => !filter || (r.name + ' ' + r.ico + ' ' + (r.city || '')).toLowerCase().includes(filter.toLowerCase()));
+  const F = (k, label, req) => (
+    <Frow label={label} req={req}>
+      <input value={edit[k] || ''} required={req} onChange={e => setEdit(p => ({ ...p, [k]: e.target.value }))} />
+    </Frow>
+  );
+
+  return (
+    <>
+      <PageHead title="Zoznam partnerov">
+        <button className="btn primary" onClick={() => setEdit({ ...empty })}>👤 Nový partner</button>
+      </PageHead>
+      <div className="toolbar">
+        <button className="btn" disabled={!sel} onClick={() => setEdit(sel)}>Detail / úprava</button>
+        <button className="btn danger" disabled={!sel} onClick={del}>Zmazať</button>
+      </div>
+      <div className="filter-row">
+        <label>Hľadať</label>
+        <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="názov, IČO, mesto…" />
+      </div>
+      <div className="grid-wrap">
+        <table className="grid">
+          <thead><tr><th>Názov</th><th>IČO</th><th>DIČ</th><th>IČ DPH</th><th>Mesto</th><th>E-mail</th><th>Telefón</th></tr></thead>
+          <tbody>
+            {shown.map(r => (
+              <tr key={r.id} style={sel?.id === r.id ? { background: '#d9ecc2' } : {}}
+                onClick={() => setSel(r)} onDoubleClick={() => setEdit(r)}>
+                <td><b>{r.name}</b></td><td>{r.ico}</td><td>{r.dic}</td><td>{r.icdph}</td><td>{r.city}</td><td>{r.email}</td><td>{r.phone}</td>
+              </tr>
+            ))}
+            {!shown.length && <tr><td colSpan={7} style={{ textAlign: 'center', color: '#999' }}>Žiadni partneri</td></tr>}
+          </tbody>
+        </table>
+      </div>
+      <div className="grid-foot">{shown.length} položiek</div>
+
+      {edit && (
+        <Modal title={edit.id ? 'Partner: ' + edit.name : 'Nový partner'} onClose={() => setEdit(null)}>
+          <form onSubmit={save}>
+            {F('name', 'Názov / meno', true)}
+            {F('ico', 'IČO')}
+            {F('dic', 'DIČ')}
+            {F('icdph', 'IČ DPH')}
+            {F('street', 'Ulica a číslo')}
+            {F('city', 'Mesto')}
+            {F('zip', 'PSČ')}
+            {F('country', 'Krajina')}
+            {F('email', 'E-mail')}
+            {F('phone', 'Telefón')}
+            {F('iban', 'IBAN')}
+            <div className="form-actions">
+              <button className="btn primary" type="submit">💾 Ulož</button>
+              <button className="btn" type="button" onClick={() => setEdit(null)}>Zrušiť</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
+}
