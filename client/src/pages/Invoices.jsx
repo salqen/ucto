@@ -32,6 +32,13 @@ export default function Invoices({ type }) {
     !filter || (r.number + ' ' + (r.partnerName || '') + ' ' + (r.vs || '')).toLowerCase().includes(filter.toLowerCase())
   );
   const [shown, sort, onSort] = useSort(filtered);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  const years = [...new Set(rows.map(r => (r.issueDate || '').slice(0, 4)).filter(Boolean))].sort().reverse();
+>>>>>>> af0afa5bc5f138148f9ecb9cc26a86d4de007793
+>>>>>>> 56a9c82d1ff3de6ca146822616c4549b42a0166b
 
   const doPay = async (e) => {
     e.preventDefault();

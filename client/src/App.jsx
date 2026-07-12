@@ -16,6 +16,36 @@ import Manager from './pages/Manager.jsx';
 import Overview from './pages/Overview.jsx';
 import Settings from './pages/Settings.jsx';
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+function Sidebar() {
+  const [docs, setDocs] = useState([]);
+  const loc = useLocation();
+  useEffect(() => {
+    api.get('/dashboard').then(d => setDocs(d.lastDocs || [])).catch(() => {});
+  }, [loc.pathname]);
+  return (
+    <div className="sidebar no-print">
+      <h3>Posledné doklady</h3>
+      <ul>
+        {docs.map((d, i) => <li key={i}>- <Link to={'/faktury/' + (d.type === 'INI' ? 'dosle' : 'vysle')}>{d.number}</Link></li>)}
+        {!docs.length && <li className="muted">žiadne doklady</li>}
+      </ul>
+      <h4><Link to="/nastavenia" style={{ color: 'inherit', textDecoration: 'none' }}>Nastavenia</Link></h4>
+      <ul>
+        <li><Link to="/nastavenia">Údaje o firme</Link></li>
+        <li><Link to="/uzavierka">Uzávierka</Link></li>
+        <li><Link to="/manazer">Manažérske informácie</Link></li>
+        <li><Link to="/prehlady">Prehľady</Link></li>
+      </ul>
+    </div>
+  );
+}
+
+>>>>>>> af0afa5bc5f138148f9ecb9cc26a86d4de007793
+>>>>>>> 56a9c82d1ff3de6ca146822616c4549b42a0166b
 export default function App() {
   const loc = useLocation();
   const isDash = loc.pathname === '/';
