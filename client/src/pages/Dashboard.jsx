@@ -71,7 +71,10 @@ export default function Dashboard() {
         <Tile color="t-violet" title="Sklady" icon="📦" to="/sklad">
           <div className="kv">Stav zásob celkom</div><div className="val">{eur(d.stockValue)}</div>
         </Tile>
-        <Tile color="t-gray" title="Manažérske informácie" icon="📊" to="/manazer">
+        <Tile color="t-gray" title="Manažérske informácie" icon="📊" menu={[
+          { label: 'Prehľady (grafy, bilancia)', to: '/prehlady' },
+          { label: 'Manažérske informácie', to: '/manazer' }
+        ]}>
           <div style={{ display: 'flex', gap: 24 }}>
             <div><div className="kv">Zisk/strata</div><div className="val">{eur(d.profit)}</div></div>
             <div><div className="kv">Peniaze</div><div className="val">{eur(d.money)}</div></div>
