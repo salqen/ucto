@@ -1,31 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, eur, dt, today } from '../api.js';
-import { PageHead, Modal, Frow } from '../components/ui.jsx';
+import { PageHead, Modal, Frow, useSort, SortTh } from '../components/ui.jsx';
+import ScanInvoice from '../components/ScanInvoice.jsx';
 
 export default function Invoices({ type }) {
   const nav = useNavigate();
   const [rows, setRows] = useState([]);
+  const [years, setYears] = useState([]);
   const [year, setYear] = useState('');
   const [filter, setFilter] = useState('');
   const [sel, setSel] = useState(null);
   const [pay, setPay] = useState(null);
+  const [scan, setScan] = useState(false);
   const [cashboxes, setCashboxes] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const isOut = type === 'INO';
   const title = isOut ? 'Zoznam vyšlých faktúr' : 'Zoznam došlých faktúr';
 
-  const load = () => api.get('/invoices?type=' + type + (year ? '&year=' + year : '')).then(setRows);
+  const loadYears = () => api.get('/invoices?type=' + type).then(all =>
+    setYears([...new Set(all.map(r => (r.issueDate || '').slice(0, 4)).filter(Boolean))].sort().reverse())
+  ).catch(() => {});
+  const load = () => api.get('/invoices?type=' + type + (year ? '&year=' + year : '')).then(setRows).then(loadYears);
   useEffect(() => { load(); }, [type, year]);
   useEffect(() => {
     api.get('/cashboxes').then(setCashboxes);
     api.get('/bankaccounts').then(setAccounts);
   }, []);
 
-  const shown = rows.filter(r =>
+  const filtered = rows.filter(r =>
     !filter || (r.number + ' ' + (r.partnerName || '') + ' ' + (r.vs || '')).toLowerCase().includes(filter.toLowerCase())
   );
-  const years = [...new Set(rows.map(r => (r.issueDate || '').slice(0, 4)).filter(Boolean))].sort().reverse();
+  const [shown, sort, onSort] = useSort(filtered);
 
   const doPay = async (e) => {
     e.preventDefault();
@@ -48,6 +54,7 @@ export default function Invoices({ type }) {
     <>
       <PageHead title={title}>
         <button className="btn primary" onClick={() => nav(`/faktury/${type}/nova`)}>🗎 Nová faktúra</button>
+        {!isOut && <button className="btn primary" onClick={() => setScan(true)}>📷 Načítať QR / EAN</button>}
       </PageHead>
       <div className="toolbar">
         <button className="btn" disabled={!sel} onClick={() => nav(`/faktury/${type}/${sel.id}`)}>Detail</button>
@@ -68,8 +75,16 @@ export default function Invoices({ type }) {
         <table className="grid">
           <thead>
             <tr>
-              <th>Typ</th><th>Doklad č.</th><th>VS</th><th>Partner</th><th>Vystavená</th><th>Splatná</th>
-              <th>Mena</th><th className="num">Spolu</th><th className="num">Uhradené</th><th></th>
+              <th>Typ</th>
+              <SortTh label="Doklad č." k="number" sort={sort} onSort={onSort} />
+              <SortTh label="VS" k="vs" sort={sort} onSort={onSort} />
+              <SortTh label="Partner" k="partnerName" sort={sort} onSort={onSort} />
+              <SortTh label="Vystavená" k="issueDate" type="date" sort={sort} onSort={onSort} />
+              <SortTh label="Splatná" k="dueDate" type="date" sort={sort} onSort={onSort} />
+              <SortTh label="Mena" k="currency" sort={sort} onSort={onSort} />
+              <SortTh label="Spolu" k="total" type="num" className="num" sort={sort} onSort={onSort} />
+              <SortTh label="Uhradené" k="paid" type="num" className="num" sort={sort} onSort={onSort} />
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -78,7 +93,7 @@ export default function Invoices({ type }) {
               const overdue = unpaid && r.dueDate && r.dueDate < today();
               return (
                 <tr key={r.id}
-                  style={sel?.id === r.id ? { background: '#d9ecc2' } : {}}
+                  className={sel?.id === r.id ? 'sel' : ''}
                   onClick={() => setSel(r)}
                   onDoubleClick={() => nav(`/faktury/${type}/${r.id}`)}>
                   <td>{isOut ? 'VF' : 'DF'}</td>
@@ -107,6 +122,17 @@ export default function Invoices({ type }) {
         </table>
       </div>
       <div className="grid-foot">{shown.length} položiek • dvojklik = otvoriť detail</div>
+
+      {scan && (
+        <ScanInvoice
+          onClose={() => setScan(false)}
+          onResult={(data) => {
+            setScan(false);
+            sessionStorage.setItem('scanInvoice', JSON.stringify(data));
+            nav('/faktury/INI/nova?scan=1');
+          }}
+        />
+      )}
 
       {pay && (
         <Modal title={'Úhrada faktúry ' + pay.number} onClose={() => setPay(null)}>

@@ -31,7 +31,7 @@ export default function Dashboard() {
   return (
     <div className="dash">
       <div className="tiles">
-        <Tile color="t-purple" title="Faktúra" icon="🗎" menu={[
+        <Tile color="t-purple" title="Vyšlé faktúry" icon="🗎" menu={[
           { label: 'Nová faktúra', to: '/faktury/INO/nova' },
           { label: 'Zoznam', to: '/faktury/vysle' },
           { label: 'Objednávky', to: '/objednavky' }
@@ -43,6 +43,15 @@ export default function Dashboard() {
               <div className="kv">Neuhradená suma</div>
               <div className="val">{eur(d.overdueSum)}</div>
             </div>
+          </div>
+        </Tile>
+        <Tile color="t-orange" title="Došlé faktúry" icon="🗎" menu={[
+          { label: 'Nová došlá faktúra', to: '/faktury/INI/nova' },
+          { label: 'Zoznam', to: '/faktury/dosle' }
+        ]}>
+          <div style={{ display: 'flex', gap: 24 }}>
+            <div><div className="kv">Počet</div><div className="val">{d.incomingCount ?? 0}</div></div>
+            <div><div className="kv">Neuhradená suma</div><div className="val">{eur(d.incomingSum)}</div></div>
           </div>
         </Tile>
         <Tile color="t-teal" title="Partner" icon="👤" to="/partneri">
@@ -59,19 +68,13 @@ export default function Dashboard() {
         <Tile color="t-blue" title="Banka" icon="💳" to="/banka">
           <div className="kv">Na účtoch</div><div className="val">{eur(d.bankBal)}</div>
         </Tile>
-        <Tile color="t-orange" title="Došlá faktúra" icon="🗎" menu={[
-          { label: 'Nová došlá faktúra', to: '/faktury/INI/nova' },
-          { label: 'Zoznam', to: '/faktury/dosle' }
-        ]}>
-          <div style={{ display: 'flex', gap: 24 }}>
-            <div><div className="kv">Počet</div><div className="val">{d.incomingCount ?? 0}</div></div>
-            <div><div className="kv">Neuhradená suma</div><div className="val">{eur(d.incomingSum)}</div></div>
-          </div>
-        </Tile>
         <Tile color="t-violet" title="Sklady" icon="📦" to="/sklad">
           <div className="kv">Stav zásob celkom</div><div className="val">{eur(d.stockValue)}</div>
         </Tile>
-        <Tile color="t-gray" title="Manažérske informácie" icon="📊" to="/manazer">
+        <Tile color="t-gray" title="Manažérske informácie" icon="📊" menu={[
+          { label: 'Prehľady (grafy, bilancia)', to: '/prehlady' },
+          { label: 'Manažérske informácie', to: '/manazer' }
+        ]}>
           <div style={{ display: 'flex', gap: 24 }}>
             <div><div className="kv">Zisk/strata</div><div className="val">{eur(d.profit)}</div></div>
             <div><div className="kv">Peniaze</div><div className="val">{eur(d.money)}</div></div>

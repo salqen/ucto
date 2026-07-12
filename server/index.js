@@ -1,12 +1,14 @@
 /* účtoERP - server (Express + KV/JSON databáza) */
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 const store = require('./store');
 
 const PORT = process.env.PORT || 3000;
 
 /* ---------- databáza ---------- */
-const DEFAULT_DB = {
+/* dáta jednej firmy (každá firma má vlastný oddelený priestor) */
+const DEFAULT_FIRM = {
   settings: {
     company: { name: 'Moja firma s.r.o.', ico: '12345678', dic: '2020123456', icdph: 'SK2020123456', street: 'Hlavná 1', city: 'Bratislava', zip: '811 01', iban: 'SK89 0900 0000 0001 2345 6789', phone: '', email: '' },
     year: new Date().getFullYear()
@@ -22,37 +24,74 @@ const DEFAULT_DB = {
   orders: [],
   seq: {}
 };
+const FIRM_KEYS = Object.keys(DEFAULT_FIRM);
 
-let db;
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+const DEFAULT_DB = {
+  firms: [{ id: 1, name: 'Moja firma s.r.o.', ...clone(DEFAULT_FIRM) }],
+  users: [],
+  sessions: []
+};
+
+let root;               /* celé úložisko: { firms, users, sessions } */
+let activeFirmId = null; /* firma aktuálnej požiadavky (hlavička X-Firm) */
+function curFirm() {
+  return root.firms.find(f => f.id === activeFirmId) || root.firms[0];
+}
+/* db = pohľad na aktívnu firmu; users/sessions/firms sú spoločné */
+const db = new Proxy({}, {
+  get(_, k) { return FIRM_KEYS.includes(k) ? curFirm()[k] : root[k]; },
+  set(_, k, v) { if (FIRM_KEYS.includes(k)) curFirm()[k] = v; else root[k] = v; return true; },
+  has(_, k) { return FIRM_KEYS.includes(k) || (root && k in root); }
+});
+
+/* migrácia starého (jednofiremného) formátu na firmy */
+function migrate(o) {
+  if (o && Array.isArray(o.firms)) return o;
+  const firm = { id: 1, name: (o && o.settings && o.settings.company && o.settings.company.name) || 'Moja firma' };
+  for (const k of FIRM_KEYS) firm[k] = (o && o[k] !== undefined) ? o[k] : clone(DEFAULT_FIRM[k]);
+  return { firms: [firm], users: (o && o.users) || [], sessions: (o && o.sessions) || [] };
+}
+
 /* úložisko považujeme za "prázdne", ak nemá ani faktúry ani partnerov
    (tak vieme prepísať aj prázdne demo dáta reálnymi zo seed.json) */
 function looksEmpty(o) {
   if (!o || typeof o !== 'object') return true;
-  const noInv = !Array.isArray(o.invoices) || o.invoices.length === 0;
-  const noPart = !Array.isArray(o.partners) || o.partners.length === 0;
+  const d = Array.isArray(o.firms) ? (o.firms[0] || {}) : o;
+  const noInv = !Array.isArray(d.invoices) || d.invoices.length === 0;
+  const noPart = !Array.isArray(d.partners) || d.partners.length === 0;
   return noInv && noPart;
 }
 async function ensureDb() {
   const raw = await store.readRaw();
   if (!looksEmpty(raw)) {
-    db = raw;
-    for (const k of Object.keys(DEFAULT_DB)) if (db[k] === undefined) db[k] = clone(DEFAULT_DB[k]);
-    return;
-  }
-  // prázdne alebo len demo dáta -> naplň reálnymi zo seed.json
-  const seed = store.readSeed ? store.readSeed() : null;
-  if (seed && typeof seed === 'object' && !looksEmpty(seed)) {
-    db = clone(seed);
+    root = migrate(raw);
   } else {
-    db = (raw && typeof raw === 'object') ? raw : clone(DEFAULT_DB);
+    // prázdne alebo len demo dáta -> naplň reálnymi zo seed.json
+    const seed = store.readSeed ? store.readSeed() : null;
+    if (seed && typeof seed === 'object' && !looksEmpty(seed)) {
+      root = migrate(clone(seed));
+    } else {
+      root = (raw && typeof raw === 'object') ? migrate(raw) : clone(DEFAULT_DB);
+    }
+    // zápis môže zlyhať, ak nie je pripojené KV (Vercel má read-only disk) — nespadni, len zaloguj
+    try { await store.writeRaw(root); } catch (e) { console.error('Zápis seedu zlyhal (chýba KV / read-only disk):', e.message); }
   }
-  for (const k of Object.keys(DEFAULT_DB)) if (db[k] === undefined) db[k] = clone(DEFAULT_DB[k]);
-  // zápis môže zlyhať, ak nie je pripojené KV (Vercel má read-only disk) — nespadni, len zaloguj
-  try { await store.writeRaw(db); } catch (e) { console.error('Zápis seedu zlyhal (chýba KV / read-only disk):', e.message); }
+  if (!Array.isArray(root.users)) root.users = [];
+  if (!Array.isArray(root.sessions)) root.sessions = [];
+  for (const f of root.firms) for (const k of FIRM_KEYS) if (f[k] === undefined) f[k] = clone(DEFAULT_FIRM[k]);
+  /* migrácia oprávnení: firmIds -> členstvá s rolou; bez oprávnení = admin všetkých firiem */
+  for (const u of root.users) {
+    if (Array.isArray(u.firmIds)) {
+      u.firms = u.firmIds.map(id => ({ id, role: 'admin' }));
+      delete u.firmIds;
+    }
+    if (!Array.isArray(u.firms)) u.firms = root.firms.map(f => ({ id: f.id, role: 'admin' }));
+  }
 }
 async function saveDb() {
-  await store.writeRaw(db);
+  await store.writeRaw(root);
 }
 function nextId(coll) {
   return db[coll].reduce((m, r) => Math.max(m, r.id || 0), 0) + 1;
@@ -97,6 +136,39 @@ function invoiceTotal(inv) {
 }
 function round2(n) { return Math.round(n * 100) / 100; }
 
+/* ---------- používateľské účty ---------- */
+function hashPw(password, salt) {
+  return crypto.createHash('sha256').update(salt + ':' + String(password)).digest('hex');
+}
+function publicUser(u) {
+  return u ? { id: u.id, name: u.name, email: u.email, firms: u.firms || [] } : null;
+}
+/* role: admin (správa firmy a členov), editor (účtovník - práca s dátami), viewer (iba čítanie) */
+const ROLES = ['admin', 'editor', 'viewer'];
+function firmRole(user, firmId) {
+  if (!user) return 'admin'; /* bez účtov = plný prístup */
+  const m = (user.firms || []).find(m => m.id === firmId);
+  return m ? m.role : null;
+}
+/* firmy, ku ktorým má používateľ prístup (bez účtov = všetky) */
+function userFirms(user) {
+  if (!user) return root.firms;
+  return root.firms.filter(f => firmRole(user, f.id));
+}
+function createSession(userId) {
+  const token = crypto.randomBytes(24).toString('hex');
+  db.sessions.push({ token, userId, created: new Date().toISOString() });
+  /* drž max. 50 relácií, nech databáza nerastie donekonečna */
+  if (db.sessions.length > 50) db.sessions = db.sessions.slice(-50);
+  return token;
+}
+function sessionUser(req) {
+  const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if (!token) return null;
+  const sess = (db.sessions || []).find(s => s.token === token);
+  return sess ? (db.users || []).find(u => u.id === sess.userId) || null : null;
+}
+
 /* ---------- app ---------- */
 const app = express();
 app.use(express.json({ limit: '5mb' }));
@@ -106,10 +178,225 @@ app.use('/api', async (req, res, next) => {
   try { await ensureDb(); next(); } catch (e) { next(e); }
 });
 
+/* výber aktívnej firmy (hlavička X-Firm; bez nej prvá firma) */
+app.use('/api', (req, res, next) => {
+  activeFirmId = Number(req.headers['x-firm']) || null;
+  next();
+});
+
+/* ochrana API: ak existujú používatelia, vyžaduje sa prihlásenie */
+app.use('/api', (req, res, next) => {
+  if (req.path.startsWith('/auth')) return next();
+  if (!(db.users || []).length) return next(); /* prvé spustenie bez účtov */
+  const user = sessionUser(req);
+  if (!user) return res.status(401).json({ error: 'Neprihlásený používateľ' });
+  req.user = user;
+  /* oprávnenia per firma: požiadavka smie pracovať len s povolenou firmou */
+  const allowed = userFirms(user);
+  if (!allowed.length) return res.status(403).json({ error: 'Nemáte prístup k žiadnej firme' });
+  if (!allowed.some(f => f.id === activeFirmId)) activeFirmId = allowed[0].id;
+  req.firmRole = firmRole(user, activeFirmId);
+  next();
+});
+
+/* vynucovanie rolí pre dátové operácie aktívnej firmy */
+app.use('/api', (req, res, next) => {
+  if (!req.user) return next();                      /* bez účtov = voľný prístup */
+  if (req.method === 'GET') return next();           /* čítanie môže každý člen */
+  if (req.path.startsWith('/auth') || req.path.startsWith('/firms')) return next(); /* vlastné kontroly */
+  if (req.path === '/settings' && req.firmRole !== 'admin') {
+    return res.status(403).json({ error: 'Nastavenia firmy môže meniť len administrátor' });
+  }
+  if (req.firmRole === 'viewer') {
+    return res.status(403).json({ error: 'Máte oprávnenie iba na čítanie' });
+  }
+  next();
+});
+
+/* ---------- autentifikácia ---------- */
+app.get('/api/auth/me', (req, res) => {
+  res.json({ user: publicUser(sessionUser(req)), required: (db.users || []).length > 0 });
+});
+
+app.post('/api/auth/register', async (req, res) => {
+  const { name, email, password } = req.body || {};
+  if (!name || !email || !password) return res.status(400).json({ error: 'Vyplňte meno, e-mail a heslo' });
+  if (String(password).length < 6) return res.status(400).json({ error: 'Heslo musí mať aspoň 6 znakov' });
+  const em = String(email).trim().toLowerCase();
+  if ((db.users || []).some(u => u.email === em)) return res.status(400).json({ error: 'Účet s týmto e-mailom už existuje' });
+  const salt = crypto.randomBytes(8).toString('hex');
+  const user = { id: nextId('users'), name: String(name).trim(), email: em, salt, pwHash: hashPw(password, salt), created: new Date().toISOString(), firms: [] };
+  const creator = sessionUser(req);
+  if (!(db.users || []).length) {
+    /* prvý účet v systéme -> administrátor všetkých existujúcich firiem */
+    user.firms = root.firms.map(f => ({ id: f.id, role: 'admin' }));
+  } else if (creator) {
+    /* účet vytvorený prihláseným používateľom -> rola v jeho aktívnej firme (predvolene účtovník) */
+    const allowed = userFirms(creator);
+    const cur = allowed.find(f => f.id === activeFirmId) || allowed[0];
+    const role = ROLES.includes(req.body.role) ? req.body.role : 'editor';
+    user.firms = cur ? [{ id: cur.id, role }] : [];
+  } else {
+    /* verejná registrácia -> nová vlastná firma, administrátor */
+    const fid = root.firms.reduce((m, f) => Math.max(m, f.id || 0), 0) + 1;
+    const firm = { id: fid, name: 'Firma – ' + user.name, ...clone(DEFAULT_FIRM) };
+    firm.settings.company.name = firm.name;
+    root.firms.push(firm);
+    user.firms = [{ id: fid, role: 'admin' }];
+  }
+  db.users.push(user);
+  const token = createSession(user.id);
+  await saveDb();
+  res.json({ token, user: publicUser(user) });
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body || {};
+  const em = String(email || '').trim().toLowerCase();
+  const user = (db.users || []).find(u => u.email === em);
+  if (!user || user.pwHash !== hashPw(password, user.salt)) return res.status(401).json({ error: 'Nesprávny e-mail alebo heslo' });
+  const token = createSession(user.id);
+  await saveDb();
+  res.json({ token, user: publicUser(user) });
+});
+
+app.post('/api/auth/logout', async (req, res) => {
+  const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  db.sessions = (db.sessions || []).filter(s => s.token !== token);
+  await saveDb();
+  res.json({ ok: true });
+});
+
+/* zoznam používateľov (bez hesiel) */
+app.get('/api/auth/users', (req, res) => {
+  if ((db.users || []).length && !sessionUser(req)) return res.status(401).json({ error: 'Neprihlásený používateľ' });
+  res.json((db.users || []).map(publicUser));
+});
+
+/* zmazanie používateľa (nie seba samého) */
+app.delete('/api/auth/users/:id', async (req, res) => {
+  const me = sessionUser(req);
+  if (!me) return res.status(401).json({ error: 'Neprihlásený používateľ' });
+  const id = Number(req.params.id);
+  if (id === me.id) return res.status(400).json({ error: 'Vlastný účet nie je možné zmazať' });
+  db.users = db.users.filter(u => u.id !== id);
+  db.sessions = (db.sessions || []).filter(s => s.userId !== id);
+  await saveDb();
+  res.json({ ok: true });
+});
+
+/* nastavenia účtu (meno, e-mail, zmena hesla) */
+app.put('/api/auth/me', async (req, res) => {
+  const user = sessionUser(req);
+  if (!user) return res.status(401).json({ error: 'Neprihlásený používateľ' });
+  const { name, email, password, oldPassword } = req.body || {};
+  if (name) user.name = String(name).trim();
+  if (email) {
+    const em = String(email).trim().toLowerCase();
+    if (db.users.some(u => u.email === em && u.id !== user.id)) return res.status(400).json({ error: 'E-mail už používa iný účet' });
+    user.email = em;
+  }
+  if (password) {
+    if (user.pwHash !== hashPw(oldPassword || '', user.salt)) return res.status(400).json({ error: 'Nesprávne pôvodné heslo' });
+    if (String(password).length < 6) return res.status(400).json({ error: 'Nové heslo musí mať aspoň 6 znakov' });
+    user.salt = crypto.randomBytes(8).toString('hex');
+    user.pwHash = hashPw(password, user.salt);
+  }
+  await saveDb();
+  res.json({ user: publicUser(user) });
+});
+
 const COLLECTIONS =['partners', 'invoices', 'cashboxes', 'cashdocs', 'bankaccounts', 'bankmoves', 'products', 'stockmoves', 'orders'];
 
 /* číselníky */
 app.get('/api/categories', (req, res) => res.json(CATEGORIES));
+
+/* firmy (vracia len firmy, na ktoré má používateľ oprávnenie, aj s rolou) */
+app.get('/api/firms', (req, res) => {
+  const u = req.user || sessionUser(req);
+  res.json(userFirms(u).map(f => ({
+    id: f.id,
+    name: (f.settings && f.settings.company && f.settings.company.name) || f.name,
+    role: firmRole(u, f.id) || 'admin'
+  })));
+});
+app.post('/api/firms', async (req, res) => {
+  const name = String((req.body && req.body.name) || '').trim();
+  if (!name) return res.status(400).json({ error: 'Zadajte názov firmy' });
+  const id = root.firms.reduce((m, f) => Math.max(m, f.id || 0), 0) + 1;
+  const firm = { id, name, ...clone(DEFAULT_FIRM) };
+  firm.settings.company.name = name;
+  root.firms.push(firm);
+  const u = req.user || sessionUser(req);
+  if (u) u.firms = [...(u.firms || []), { id, role: 'admin' }]; /* zakladateľ = administrátor */
+  await saveDb();
+  res.json({ id, name });
+});
+app.delete('/api/firms/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  const u = req.user || sessionUser(req);
+  if (root.users.length && firmRole(u, id) !== 'admin') return res.status(403).json({ error: 'Firmu môže zmazať len jej administrátor' });
+  if (root.firms.length <= 1) return res.status(400).json({ error: 'Poslednú firmu nie je možné zmazať' });
+  root.firms = root.firms.filter(f => f.id !== id);
+  for (const usr of root.users) usr.firms = (usr.firms || []).filter(m => m.id !== id);
+  await saveDb();
+  res.json({ ok: true });
+});
+
+/* členovia firmy a ich role */
+function reqRole(req, firmId) {
+  if (!root.users.length) return 'admin'; /* bez účtov = voľný prístup */
+  const u = req.user || sessionUser(req);
+  return u ? firmRole(u, firmId) : null;
+}
+function firmAdmins(firmId) {
+  return root.users.filter(u => firmRole(u, firmId) === 'admin');
+}
+app.get('/api/firms/:id/users', (req, res) => {
+  const id = Number(req.params.id);
+  if (!reqRole(req, id)) return res.status(403).json({ error: 'Nemáte prístup k tejto firme' });
+  res.json(root.users.filter(u => firmRole(u, id)).map(u => ({ ...publicUser(u), role: firmRole(u, id) })));
+});
+app.post('/api/firms/:id/users', async (req, res) => {
+  const id = Number(req.params.id);
+  if (reqRole(req, id) !== 'admin') return res.status(403).json({ error: 'Členov môže spravovať len administrátor firmy' });
+  const em = String((req.body && req.body.email) || '').trim().toLowerCase();
+  const role = ROLES.includes(req.body && req.body.role) ? req.body.role : 'editor';
+  const u = root.users.find(x => x.email === em);
+  if (!u) return res.status(404).json({ error: 'Používateľ s týmto e-mailom neexistuje. Najprv si musí vytvoriť účet.' });
+  const m = (u.firms || []).find(m => m.id === id);
+  if (m) m.role = role;
+  else u.firms = [...(u.firms || []), { id, role }];
+  await saveDb();
+  res.json({ ...publicUser(u), role });
+});
+app.put('/api/firms/:id/users/:userId', async (req, res) => {
+  const id = Number(req.params.id);
+  if (reqRole(req, id) !== 'admin') return res.status(403).json({ error: 'Role môže meniť len administrátor firmy' });
+  const role = req.body && req.body.role;
+  if (!ROLES.includes(role)) return res.status(400).json({ error: 'Neplatná rola' });
+  const u = root.users.find(x => x.id === Number(req.params.userId));
+  const m = u && (u.firms || []).find(m => m.id === id);
+  if (!m) return res.status(404).json({ error: 'Používateľ nie je členom tejto firmy' });
+  if (m.role === 'admin' && role !== 'admin' && firmAdmins(id).length <= 1) {
+    return res.status(400).json({ error: 'Firma musí mať aspoň jedného administrátora' });
+  }
+  m.role = role;
+  await saveDb();
+  res.json({ ...publicUser(u), role });
+});
+app.delete('/api/firms/:id/users/:userId', async (req, res) => {
+  const id = Number(req.params.id);
+  if (reqRole(req, id) !== 'admin') return res.status(403).json({ error: 'Členov môže spravovať len administrátor firmy' });
+  const u = root.users.find(x => x.id === Number(req.params.userId));
+  if (!u || !firmRole(u, id)) return res.status(404).json({ error: 'Používateľ nie je členom tejto firmy' });
+  if (firmRole(u, id) === 'admin' && firmAdmins(id).length <= 1) {
+    return res.status(400).json({ error: 'Firma musí mať aspoň jedného administrátora' });
+  }
+  u.firms = (u.firms || []).filter(m => m.id !== id);
+  await saveDb();
+  res.json({ ok: true });
+});
 
 /* nastavenia */
 app.get('/api/settings', (req, res) => res.json(db.settings));
@@ -255,6 +542,35 @@ app.post('/api/invoices/:id/pay', async (req, res) => {
   inv.paid = round2((inv.paid || 0) + amt);
   await saveDb();
   res.json(inv);
+});
+
+/* import bankového výpisu -> bankové doklady + úhrada spárovaných faktúr */
+app.post('/api/bankmoves/import', async (req, res) => {
+  const { accountId, moves } = req.body || {};
+  const accId = Number(accountId) || (db.bankaccounts[0] && db.bankaccounts[0].id);
+  if (!accId) return res.status(400).json({ error: 'Chýba bankový účet' });
+  if (!Array.isArray(moves) || !moves.length) return res.status(400).json({ error: 'Žiadne pohyby na import' });
+  let created = 0, paired = 0;
+  for (const m of moves) {
+    const amt = round2(Math.abs(Number(m.amount) || 0));
+    if (!(amt > 0)) continue;
+    const type = m.type === 'V' ? 'V' : 'P';
+    const inv = m.invoiceId ? db.invoices.find(i => i.id === Number(m.invoiceId)) : null;
+    const category = m.category || (inv ? (inv.type === 'INO' ? 'UP' : 'OV') : (type === 'P' ? 'OP' : 'OV'));
+    const doc = {
+      id: nextId('bankmoves'), accountId: accId, type,
+      number: nextNumber('BV', m.date), date: m.date || new Date().toISOString().slice(0, 10),
+      partnerId: inv ? inv.partnerId : (m.partnerId ? Number(m.partnerId) : null),
+      text: m.text || (inv ? `Úhrada faktúry ${inv.number}` : 'Import výpisu'),
+      category, amount: amt, vs: m.vs || (inv ? inv.vs : ''),
+      invoiceId: inv ? inv.id : undefined
+    };
+    db.bankmoves.push(doc);
+    created++;
+    if (inv) { inv.paid = round2((inv.paid || 0) + amt); paired++; }
+  }
+  await saveDb();
+  res.json({ ok: true, created, paired });
 });
 
 /* generické CRUD */

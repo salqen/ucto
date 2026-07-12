@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api.js';
-import { PageHead, Modal, Frow } from '../components/ui.jsx';
+import { PageHead, Modal, Frow, useSort, SortTh } from '../components/ui.jsx';
 
 const empty = { name: '', ico: '', dic: '', icdph: '', street: '', city: '', zip: '', country: 'Slovensko', email: '', phone: '', iban: '' };
 
@@ -23,7 +23,8 @@ export default function Partners() {
     await api.del('/partners/' + sel.id); setSel(null); load();
   };
 
-  const shown = rows.filter(r => !filter || (r.name + ' ' + r.ico + ' ' + (r.city || '')).toLowerCase().includes(filter.toLowerCase()));
+  const filtered = rows.filter(r => !filter || (r.name + ' ' + r.ico + ' ' + (r.city || '')).toLowerCase().includes(filter.toLowerCase()));
+  const [shown, sort, onSort] = useSort(filtered);
   const F = (k, label, req) => (
     <Frow label={label} req={req}>
       <input value={edit[k] || ''} required={req} onChange={e => setEdit(p => ({ ...p, [k]: e.target.value }))} />
@@ -45,10 +46,18 @@ export default function Partners() {
       </div>
       <div className="grid-wrap">
         <table className="grid">
-          <thead><tr><th>Názov</th><th>IČO</th><th>DIČ</th><th>IČ DPH</th><th>Mesto</th><th>E-mail</th><th>Telefón</th></tr></thead>
+          <thead><tr>
+            <SortTh label="Názov" k="name" sort={sort} onSort={onSort} />
+            <SortTh label="IČO" k="ico" sort={sort} onSort={onSort} />
+            <SortTh label="DIČ" k="dic" sort={sort} onSort={onSort} />
+            <SortTh label="IČ DPH" k="icdph" sort={sort} onSort={onSort} />
+            <SortTh label="Mesto" k="city" sort={sort} onSort={onSort} />
+            <SortTh label="E-mail" k="email" sort={sort} onSort={onSort} />
+            <SortTh label="Telefón" k="phone" sort={sort} onSort={onSort} />
+          </tr></thead>
           <tbody>
             {shown.map(r => (
-              <tr key={r.id} style={sel?.id === r.id ? { background: '#d9ecc2' } : {}}
+              <tr key={r.id} className={sel?.id === r.id ? 'sel' : ''}
                 onClick={() => setSel(r)} onDoubleClick={() => setEdit(r)}>
                 <td><b>{r.name}</b></td><td>{r.ico}</td><td>{r.dic}</td><td>{r.icdph}</td><td>{r.city}</td><td>{r.email}</td><td>{r.phone}</td>
               </tr>
