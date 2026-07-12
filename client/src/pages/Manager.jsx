@@ -51,11 +51,11 @@ export default function Manager() {
               <g key={i}>
                 <rect x={i * bw + 8} y={H - hi} width={bw / 2 - 10} height={hi} fill="#76b82a" />
                 <rect x={i * bw + bw / 2 + 2} y={H - he} width={bw / 2 - 10} height={he} fill="#c0392b" />
-                <text x={i * bw + bw / 2} y={H + 16} textAnchor="middle" fontSize="12" fill="#666">{M[i]}</text>
+                <text x={i * bw + bw / 2} y={H + 16} textAnchor="middle" fontSize="12" fill="var(--muted)">{M[i]}</text>
               </g>
             );
           })}
-          <line x1="0" y1={H} x2={W} y2={H} stroke="#999" />
+          <line x1="0" y1={H} x2={W} y2={H} stroke="var(--input-border)" />
         </svg>
         <div className="legend">
           <span><i style={{ background: '#76b82a' }} />Príjmy</span>

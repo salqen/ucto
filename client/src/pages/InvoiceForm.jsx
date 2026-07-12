@@ -2,8 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, eur, dt, today } from '../api.js';
 import { Section, Frow, PageHead } from '../components/ui.jsx';
+import { encode as encodeBySquare } from 'bysquare/pay';
+import QRCode from 'qrcode';
 
-const emptyItem = () => ({ name: '', qty: 1, unit: 'ks', price: 0, vat: 23 });
+const emptyItem = () => ({ code: '', name: '', qty: 1, unit: 'ks', price: 0, vat: 23 });
+/* formát čísel v tlačovej podobe (ako keepi): množstvo a JC na 5 des. miest */
+const num5 = n => (Number(n) || 0).toLocaleString('sk-SK', { minimumFractionDigits: 5, maximumFractionDigits: 5 });
+const num2 = n => (Number(n) || 0).toLocaleString('sk-SK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function InvoiceForm() {
   const { type: typeParam, id } = useParams();
@@ -12,19 +17,57 @@ export default function InvoiceForm() {
   const isNew = !id || id === 'nova';
   const [partners, setPartners] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [bankAccounts, setBankAccounts] = useState([]);
   const [inv, setInv] = useState({
     type: typeParam === 'INI' ? 'INI' : 'INO',
     number: '', vs: '', partnerId: '', currency: 'EUR',
     issueDate: today(), deliveryDate: today(),
     dueDate: new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10),
+    ks: '308', paymentMethod: 'Prevodný príkaz', deliveryMethod: 'Osobne',
+    orderNo: '', deliveryAddress: '', bankAccountId: '',
     items: [emptyItem()], note: '', paid: 0
   });
   const [showPrint, setShowPrint] = useState(false);
   const isOut = inv.type === 'INO';
 
+  /* predvyplnenie z naskenovaného QR (PAY by square) / EAN kódu */
+  const [scanData, setScanData] = useState(null);
+  useEffect(() => {
+    if (!isNew || !sp.get('scan')) return;
+    try {
+      const d = JSON.parse(sessionStorage.getItem('scanInvoice') || 'null');
+      if (!d) return;
+      sessionStorage.removeItem('scanInvoice');
+      setScanData(d);
+      setInv(p => ({
+        ...p,
+        type: 'INI',
+        vs: d.vs || p.vs,
+        ks: d.ks || p.ks,
+        dueDate: d.dueDate || p.dueDate,
+        currency: d.currency || p.currency,
+        note: d.iban ? ('IBAN dodávateľa: ' + d.iban) : p.note,
+        items: d.amount
+          ? [{ code: '', name: d.note || 'Fakturovaná suma', qty: 1, unit: 'ks', price: d.amount, vat: 0 }]
+          : p.items
+      }));
+    } catch {}
+  }, []);
+  /* po načítaní partnerov skús spárovať dodávateľa podľa IBAN alebo názvu */
+  useEffect(() => {
+    if (!scanData || !partners.length || inv.partnerId) return;
+    const norm = s => String(s || '').replace(/\s/g, '').toLowerCase();
+    const found = partners.find(p =>
+      (scanData.iban && norm(p.iban) === norm(scanData.iban)) ||
+      (scanData.partnerName && norm(p.name) === norm(scanData.partnerName))
+    );
+    if (found) setInv(p => ({ ...p, partnerId: String(found.id) }));
+  }, [partners, scanData]);
+
   useEffect(() => {
     api.get('/partners').then(setPartners);
     api.get('/settings').then(setSettings);
+    api.get('/bankaccounts').then(setBankAccounts).catch(() => {});
     if (!isNew) {
       api.get('/invoices').then(list => {
         const found = list.find(r => r.id === Number(id));
@@ -60,60 +103,175 @@ export default function InvoiceForm() {
 
   const partner = partners.find(p => p.id === Number(inv.partnerId));
 
+  /* platobný QR kód (PAY by square) na vyšlej faktúre */
+  const [qrUrl, setQrUrl] = useState('');
+  useEffect(() => {
+    if (!showPrint || !isOut || !settings) { setQrUrl(''); return; }
+    const bank = bankAccounts.find(a => a.id === Number(inv.bankAccountId)) || bankAccounts[0];
+    const iban = String(bank?.iban || '').replace(/\s/g, '').toUpperCase();
+    const amount = Math.round(totals.total * 100) / 100;
+    if (!iban || !(amount > 0)) { setQrUrl(''); return; }
+    try {
+      const qrString = encodeBySquare({
+        invoiceId: inv.number || undefined,
+        payments: [{
+          type: 1,
+          amount,
+          currencyCode: inv.currency || 'EUR',
+          variableSymbol: String(inv.vs || '').replace(/\D/g, '').slice(0, 10) || undefined,
+          constantSymbol: String(inv.ks || '').replace(/\D/g, '').slice(0, 4) || undefined,
+          paymentDueDate: /^\d{4}-\d{2}-\d{2}$/.test(inv.dueDate || '') ? inv.dueDate.replace(/-/g, '') : undefined,
+          paymentNote: ('Faktúra ' + (inv.number || '')).trim(),
+          bankAccounts: [{ iban }],
+          beneficiary: { name: settings.company?.name || '' }
+        }]
+      });
+      QRCode.toDataURL(qrString, { margin: 1, width: 240, errorCorrectionLevel: 'M' })
+        .then(setQrUrl).catch(() => setQrUrl(''));
+    } catch { setQrUrl(''); }
+  }, [showPrint, isOut, settings, bankAccounts, inv.bankAccountId, inv.number, inv.vs, inv.ks, inv.dueDate, inv.currency, totals.total]);
+
   if (showPrint && settings) {
     const co = settings.company;
     const sup = isOut ? co : partner;
     const cust = isOut ? partner : co;
+    const vatPayer = isOut ? !!co.vatPayer : true; /* pri došlej faktúre nevieme, zobrazíme DPH */
+    const bank = bankAccounts.find(a => a.id === Number(inv.bankAccountId)) || bankAccounts[0] || {};
+    const rounding = Math.round(totals.total * 100) / 100 - totals.total;
+    const KV = ({ k, children, plain }) => (
+      <div className="kvrow"><span className="k">{k}</span><span className={'v' + (plain ? ' plain' : '')}>{children}</span></div>
+    );
     return (
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: 20, fontSize: 13 }}>
+      <div className="inv-print">
         <div className="toolbar no-print">
           <button className="btn primary" onClick={() => window.print()}>🖨 Tlačiť</button>
           <button className="btn" onClick={() => setShowPrint(false)}>← Späť na formulár</button>
         </div>
-        <h1 style={{ fontSize: 24, margin: '10px 0' }}>FAKTÚRA {inv.number}</h1>
-        <div style={{ display: 'flex', gap: 40, margin: '20px 0' }}>
-          <div style={{ flex: 1 }}>
-            <b style={{ color: '#76b82a' }}>DODÁVATEĽ</b>
-            <div><b>{sup?.name}</b></div>
-            <div>{sup?.street}</div>
-            <div>{sup?.zip} {sup?.city}</div>
-            <div>IČO: {sup?.ico} &nbsp; DIČ: {sup?.dic}</div>
-            {sup?.icdph && <div>IČ DPH: {sup.icdph}</div>}
-            {sup?.iban && <div>IBAN: {sup.iban}</div>}
+
+        <div className="inv-head">
+          <span className="t">Faktúra</span>
+          <span className="n">číslo {inv.number}</span>
+        </div>
+
+        <div className="inv-box">
+          {/* dodávateľ / odberateľ */}
+          <div className="inv-row">
+            <div className="inv-cell">
+              <h4>Dodávateľ:</h4>
+              <div className="co-name">{sup?.name}</div>
+              <div>{sup?.street}</div>
+              <div>{sup?.zip} {sup?.city}</div>
+              <div>{sup?.country || 'Slovenská republika'}</div>
+              <div style={{ height: 8 }} />
+              <KV k="IČO:" plain>{sup?.ico}</KV>
+              <KV k="DIČ:" plain>{sup?.dic}</KV>
+              <KV k="IČ DPH:" plain>{isOut && !co.vatPayer ? 'Firma nie je platiteľom DPH' : (sup?.icdph || '')}</KV>
+              {isOut && co.register && <div style={{ marginTop: 6 }}>{co.register}</div>}
+            </div>
+            <div className="inv-cell">
+              <h4>Odberateľ:</h4>
+              <div className="co-name">{cust?.name}</div>
+              <div>{cust?.street}</div>
+              <div>{cust?.zip} {cust?.city}</div>
+              <div>{cust?.country || ''}</div>
+              <div style={{ height: 8 }} />
+              <KV k="IČO:" plain>{cust?.ico}</KV>
+              <KV k="DIČ:" plain>{cust?.dic}</KV>
+              <KV k="IČ DPH:" plain>{cust?.icdph || ''}</KV>
+            </div>
           </div>
-          <div style={{ flex: 1 }}>
-            <b style={{ color: '#76b82a' }}>ODBERATEĽ</b>
-            <div><b>{cust?.name}</b></div>
-            <div>{cust?.street}</div>
-            <div>{cust?.zip} {cust?.city}</div>
-            <div>IČO: {cust?.ico} &nbsp; DIČ: {cust?.dic}</div>
-            {cust?.icdph && <div>IČ DPH: {cust.icdph}</div>}
+          {/* fakturačné údaje / adresa dodania */}
+          <div className="inv-row">
+            <div className="inv-cell">
+              <h4>Fakturačné údaje:</h4>
+              <KV k="Konštantný symbol:">{inv.ks}</KV>
+              <KV k="Variabilný symbol:">{inv.vs}</KV>
+              <KV k="Forma úhrady:">{inv.paymentMethod}</KV>
+              <KV k="Spôsob dodania:">{inv.deliveryMethod}</KV>
+              {inv.orderNo && <KV k="Objednávka č.:">{inv.orderNo}</KV>}
+            </div>
+            <div className="inv-cell">
+              <h4>Adresa dodania:</h4>
+              {(inv.deliveryAddress || '').split('\n').map((l, i) => <div key={i}>{l}</div>)}
+            </div>
+          </div>
+          {/* banka / dátumy */}
+          <div className="inv-row">
+            <div className="inv-cell">
+              <div>{bank.bank || ''}</div>
+              <KV k="Číslo bankového účtu:">{bank.number || ''}</KV>
+              <KV k="SWIFT:">{bank.swift || ''}</KV>
+              <KV k="IBAN:">{bank.iban || ''}</KV>
+            </div>
+            <div className="inv-cell">
+              <KV k="Dátum vystavenia:">{dt(inv.issueDate)}</KV>
+              <KV k="Dátum dodania:">{dt(inv.deliveryDate)}</KV>
+              <KV k="Dátum splatnosti:">{dt(inv.dueDate)}</KV>
+            </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 40, marginBottom: 16 }}>
-          <span>Dátum vystavenia: <b>{dt(inv.issueDate)}</b></span>
-          <span>Dátum dodania: <b>{dt(inv.deliveryDate)}</b></span>
-          <span>Splatnosť: <b>{dt(inv.dueDate)}</b></span>
-          <span>VS: <b>{inv.vs}</b></span>
-        </div>
-        <table className="grid">
-          <thead><tr><th>Položka</th><th className="num">Množstvo</th><th>MJ</th><th className="num">Cena/MJ</th><th className="num">DPH %</th><th className="num">Spolu</th></tr></thead>
+
+        <div style={{ padding: '6px 4px 2px' }}>Faktúrujeme Vám</div>
+        <table className="inv-items">
+          <thead>
+            <tr>
+              <th style={{ width: 55 }}>Kód<br />položky</th>
+              <th>Názov položky</th>
+              <th className="num">Množstvo</th>
+              <th style={{ textAlign: 'center', width: 45 }}>MJ</th>
+              <th className="num">JC</th>
+              {vatPayer && <th className="num">DPH %</th>}
+              <th className="num">Cena celkom</th>
+            </tr>
+          </thead>
           <tbody>
             {inv.items.filter(i => i.name).map((it, i) => (
               <tr key={i}>
-                <td>{it.name}</td><td className="num">{it.qty}</td><td>{it.unit}</td>
-                <td className="num">{eur(it.price)}</td><td className="num">{it.vat}</td>
-                <td className="num">{eur(it.qty * it.price * (1 + it.vat / 100))}</td>
+                <td>{it.code}</td>
+                <td>{it.name}</td>
+                <td className="num">{num5(it.qty)}</td>
+                <td style={{ textAlign: 'center' }}>{(it.unit || '').toUpperCase()}</td>
+                <td className="num">{num5(it.price)}</td>
+                {vatPayer && <td className="num">{it.vat}</td>}
+                <td className="num">{num2((it.qty || 0) * (it.price || 0) * (1 + (it.vat || 0) / 100))}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        <div style={{ textAlign: 'right', marginTop: 14 }}>
-          <div>Základ dane: <b>{eur(totals.base)}</b></div>
-          <div>DPH: <b>{eur(totals.vat)}</b></div>
-          <div style={{ fontSize: 20, marginTop: 6 }}>Spolu na úhradu: <b style={{ color: '#5f9622' }}>{eur(totals.total)}</b></div>
+
+        <div className="inv-sum">
+          <table>
+            <tbody>
+              {vatPayer && <tr><td>Základ dane:</td><td>{num2(totals.base)} {inv.currency || 'EUR'}</td></tr>}
+              {vatPayer && <tr><td>DPH:</td><td>{num2(totals.vat)} {inv.currency || 'EUR'}</td></tr>}
+              <tr><td>Zaokrúhlenie:</td><td>{num2(rounding)} {inv.currency || 'EUR'}</td></tr>
+              <tr className="total"><td>Celkom k úhrade:</td><td>{num2(totals.total)} {inv.currency || 'EUR'}</td></tr>
+            </tbody>
+          </table>
         </div>
-        {inv.note && <p style={{ marginTop: 16 }}>Poznámka: {inv.note}</p>}
+
+        <div className="inv-note">
+          {inv.note
+            ? inv.note
+            : (isOut && !co.vatPayer ? 'Dodávateľ nie je platiteľom DPH. Číslo faktúry uvádzajte ako VS. Ďakujeme' : '')}
+        </div>
+
+        {qrUrl && (
+          <div className="inv-qr">
+            <img src={qrUrl} alt="PAY by square" />
+            <div className="inv-qr-label">PAY by square<br />Naskenujte v aplikácii svojej banky</div>
+          </div>
+        )}
+
+        <div className="inv-footer">
+          <span>Vystavil: {co.owner || co.name}</span>
+          <span>Telefón: {co.phone}</span>
+          <span>E-mail : {co.email}</span>
+        </div>
+        <div className="inv-created">
+          <span>Vytvorené cez účtoERP</span>
+          <span>Strana 1 z 1</span>
+        </div>
       </div>
     );
   }
@@ -125,10 +283,16 @@ export default function InvoiceForm() {
         <button className="btn" onClick={() => nav('/faktury/' + (isOut ? 'vysle' : 'dosle'))}>Zoznam</button>
       </PageHead>
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0 10px' }}>
-        <span>Variabilný symbol č. <b style={{ color: '#76b82a', fontSize: 15 }}>{inv.vs || '(pridelí sa automaticky)'}</b></span>
+        <span>Variabilný symbol č. <b style={{ color: 'var(--accent)', fontSize: 15 }}>{inv.vs || '(pridelí sa automaticky)'}</b></span>
         <span>Spolu: <b style={{ color: '#f39200', fontSize: 15 }}>{eur(totals.total)}</b></span>
       </div>
 
+      {scanData && (
+        <div style={{ background: '#eef6e3', border: '1px solid #b6d98a', padding: '8px 12px', marginBottom: 10, fontSize: 12 }}>
+          📷 Údaje načítané z {scanData.kind === 'qr' ? 'QR kódu (PAY by square)' : 'čiarového kódu (EAN)'}.
+          {scanData.partnerName && !inv.partnerId && <> Dodávateľ „{scanData.partnerName}" sa nenašiel v partneroch — vyberte ho alebo ho najprv vytvorte v Partneroch.</>}
+        </div>
+      )}
       <Section title="Hlavička faktúry">
         <div className="hint">* - povinný údaj</div>
         <div className="form-grid">
@@ -167,6 +331,28 @@ export default function InvoiceForm() {
                 IČO: {partner.ico} • DIČ: {partner.dic} {partner.icdph && <>• IČ DPH: {partner.icdph}</>}
               </div>
             )}
+            <Frow label="Konštantný symbol"><input value={inv.ks || ''} onChange={e => set('ks', e.target.value)} /></Frow>
+            <Frow label="Forma úhrady">
+              <select value={inv.paymentMethod || 'Prevodný príkaz'} onChange={e => set('paymentMethod', e.target.value)}>
+                <option>Prevodný príkaz</option><option>Hotovosť</option><option>Dobierka</option><option>Platobná karta</option><option>Zápočet</option>
+              </select>
+            </Frow>
+            <Frow label="Spôsob dodania">
+              <select value={inv.deliveryMethod || 'Osobne'} onChange={e => set('deliveryMethod', e.target.value)}>
+                <option>Osobne</option><option>Poštou</option><option>Kuriérom</option><option>E-mailom</option>
+              </select>
+            </Frow>
+            <Frow label="Objednávka č."><input value={inv.orderNo || ''} onChange={e => set('orderNo', e.target.value)} /></Frow>
+            <Frow label="Bankový účet">
+              <select value={inv.bankAccountId || ''} onChange={e => set('bankAccountId', e.target.value)}>
+                {bankAccounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.iban ? ' – ' + a.iban : ''}</option>)}
+                {!bankAccounts.length && <option value="">(žiadny účet – pridajte v Nastaveniach)</option>}
+              </select>
+            </Frow>
+            <Frow label="Adresa dodania">
+              <textarea rows={3} value={inv.deliveryAddress || ''} placeholder="ak sa líši od adresy odberateľa"
+                onChange={e => set('deliveryAddress', e.target.value)} />
+            </Frow>
           </div>
         </div>
       </Section>
@@ -174,11 +360,12 @@ export default function InvoiceForm() {
       <Section title="Položky faktúry">
         <table className="grid items-table">
           <thead>
-            <tr><th style={{ width: '40%' }}>Názov položky</th><th>Množstvo</th><th>MJ</th><th>Cena/MJ bez DPH</th><th>DPH %</th><th className="num">Spolu s DPH</th><th></th></tr>
+            <tr><th style={{ width: 70 }}>Kód</th><th style={{ width: '36%' }}>Názov položky</th><th>Množstvo</th><th>MJ</th><th>Cena/MJ bez DPH</th><th>DPH %</th><th className="num">Spolu s DPH</th><th></th></tr>
           </thead>
           <tbody>
             {inv.items.map((it, i) => (
               <tr key={i} style={{ cursor: 'default' }}>
+                <td><input value={it.code || ''} onChange={e => setItem(i, 'code', e.target.value)} /></td>
                 <td><input value={it.name} onChange={e => setItem(i, 'name', e.target.value)} placeholder="popis položky" /></td>
                 <td><input type="number" step="0.01" value={it.qty} onChange={e => setItem(i, 'qty', Number(e.target.value))} /></td>
                 <td><input value={it.unit} onChange={e => setItem(i, 'unit', e.target.value)} style={{ width: 50 }} /></td>

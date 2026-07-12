@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api, eur, dt, today } from '../api.js';
-import { PageHead, Modal, Frow } from '../components/ui.jsx';
+import { PageHead, Modal, Frow, useSort, SortTh } from '../components/ui.jsx';
 
 export default function Warehouse() {
   const [tab, setTab] = useState('stock'); // stock | cards | moves
@@ -36,6 +36,18 @@ export default function Warehouse() {
     await api.del(`/${coll}/${row.id}`); setSel(null); load();
   };
 
+  const [stockRows, stockSort, stockOnSort] = useSort(stock);
+  const [prodRows, prodSort, prodOnSort] = useSort(products);
+  const movesWithNames = [...moves]
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+    .map(m => ({
+      ...m,
+      typeName: m.type === 'P' ? 'Príjemka' : 'Výdajka',
+      productName: (products.find(p => p.id === m.productId) || {}).name || '',
+      partnerName: (partners.find(p => p.id === m.partnerId) || {}).name || ''
+    }));
+  const [moveRows, moveSort, moveOnSort] = useSort(movesWithNames);
+
   return (
     <>
       <PageHead title="Sklad">
@@ -53,9 +65,17 @@ export default function Warehouse() {
       {tab === 'stock' && (
         <div className="grid-wrap">
           <table className="grid">
-            <thead><tr><th>Kód</th><th>Názov</th><th>MJ</th><th className="num">Množstvo</th><th className="num">Priem. cena</th><th className="num">Hodnota</th><th>Min. zásoba</th></tr></thead>
+            <thead><tr>
+              <SortTh label="Kód" k="code" sort={stockSort} onSort={stockOnSort} />
+              <SortTh label="Názov" k="name" sort={stockSort} onSort={stockOnSort} />
+              <SortTh label="MJ" k="unit" sort={stockSort} onSort={stockOnSort} />
+              <SortTh label="Množstvo" k="qty" type="num" className="num" sort={stockSort} onSort={stockOnSort} />
+              <SortTh label="Priem. cena" k="avgPrice" type="num" className="num" sort={stockSort} onSort={stockOnSort} />
+              <SortTh label="Hodnota" k="value" type="num" className="num" sort={stockSort} onSort={stockOnSort} />
+              <SortTh label="Min. zásoba" k="minStock" type="num" sort={stockSort} onSort={stockOnSort} />
+            </tr></thead>
             <tbody>
-              {stock.map(r => (
+              {stockRows.map(r => (
                 <tr key={r.id} style={{ cursor: 'default', ...(r.minStock && r.qty < r.minStock ? { background: '#fdecea' } : {}) }}>
                   <td>{r.code}</td><td><b>{r.name}</b></td><td>{r.unit}</td>
                   <td className="num">{r.qty}</td><td className="num">{eur(r.avgPrice)}</td><td className="num">{eur(r.value)}</td>
@@ -77,10 +97,17 @@ export default function Warehouse() {
           </div>
           <div className="grid-wrap">
             <table className="grid">
-              <thead><tr><th>Kód</th><th>Názov</th><th>MJ</th><th className="num">Predajná cena</th><th className="num">DPH %</th><th className="num">Min. zásoba</th></tr></thead>
+              <thead><tr>
+                <SortTh label="Kód" k="code" sort={prodSort} onSort={prodOnSort} />
+                <SortTh label="Názov" k="name" sort={prodSort} onSort={prodOnSort} />
+                <SortTh label="MJ" k="unit" sort={prodSort} onSort={prodOnSort} />
+                <SortTh label="Predajná cena" k="price" type="num" className="num" sort={prodSort} onSort={prodOnSort} />
+                <SortTh label="DPH %" k="vat" type="num" className="num" sort={prodSort} onSort={prodOnSort} />
+                <SortTh label="Min. zásoba" k="minStock" type="num" className="num" sort={prodSort} onSort={prodOnSort} />
+              </tr></thead>
               <tbody>
-                {products.map(r => (
-                  <tr key={r.id} style={sel?.id === r.id ? { background: '#d9ecc2' } : {}} onClick={() => setSel(r)} onDoubleClick={() => setEditP(r)}>
+                {prodRows.map(r => (
+                  <tr key={r.id} className={sel?.id === r.id ? 'sel' : ''} onClick={() => setSel(r)} onDoubleClick={() => setEditP(r)}>
                     <td>{r.code}</td><td><b>{r.name}</b></td><td>{r.unit}</td>
                     <td className="num">{eur(r.price)}</td><td className="num">{r.vat}</td><td className="num">{r.minStock}</td>
                   </tr>
@@ -100,15 +127,24 @@ export default function Warehouse() {
           </div>
           <div className="grid-wrap">
             <table className="grid">
-              <thead><tr><th>Doklad č.</th><th>Dátum</th><th>Typ</th><th>Položka</th><th className="num">Množstvo</th><th className="num">Cena/MJ</th><th>Partner</th><th>Poznámka</th></tr></thead>
+              <thead><tr>
+                <SortTh label="Doklad č." k="number" sort={moveSort} onSort={moveOnSort} />
+                <SortTh label="Dátum" k="date" type="date" sort={moveSort} onSort={moveOnSort} />
+                <SortTh label="Typ" k="typeName" sort={moveSort} onSort={moveOnSort} />
+                <SortTh label="Položka" k="productName" sort={moveSort} onSort={moveOnSort} />
+                <SortTh label="Množstvo" k="qty" type="num" className="num" sort={moveSort} onSort={moveOnSort} />
+                <SortTh label="Cena/MJ" k="price" type="num" className="num" sort={moveSort} onSort={moveOnSort} />
+                <SortTh label="Partner" k="partnerName" sort={moveSort} onSort={moveOnSort} />
+                <SortTh label="Poznámka" k="note" sort={moveSort} onSort={moveOnSort} />
+              </tr></thead>
               <tbody>
-                {[...moves].sort((a, b) => (b.date || '').localeCompare(a.date || '')).map(r => (
-                  <tr key={r.id} style={sel?.id === r.id ? { background: '#d9ecc2' } : {}} onClick={() => setSel(r)} onDoubleClick={() => setEditM(r)}>
+                {moveRows.map(r => (
+                  <tr key={r.id} className={sel?.id === r.id ? 'sel' : ''} onClick={() => setSel(r)} onDoubleClick={() => setEditM(r)}>
                     <td>{r.number}</td><td>{dt(r.date)}</td>
-                    <td>{r.type === 'P' ? 'Príjemka' : 'Výdajka'}</td>
-                    <td>{(products.find(p => p.id === r.productId) || {}).name}</td>
+                    <td>{r.typeName}</td>
+                    <td>{r.productName}</td>
                     <td className="num">{r.qty}</td><td className="num">{eur(r.price)}</td>
-                    <td>{(partners.find(p => p.id === r.partnerId) || {}).name || ''}</td>
+                    <td>{r.partnerName}</td>
                     <td>{r.note}</td>
                   </tr>
                 ))}

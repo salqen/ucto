@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api, eur, dt, today } from '../api.js';
-import { PageHead, Modal, Frow } from './ui.jsx';
+import { PageHead, Modal, Frow, useSort, SortTh } from './ui.jsx';
+import ImportStatement from './ImportStatement.jsx';
 
 /*
  Spoločný modul pre Pokladňu a Banku.
@@ -21,6 +22,7 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
   const [edit, setEdit] = useState(null);
   const [accEdit, setAccEdit] = useState(null);
   const [sel, setSel] = useState(null);
+  const [imp, setImp] = useState(false);
 
   const load = () => {
     api.get('/' + accColl).then(a => {
@@ -38,7 +40,18 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
   const acc = accounts.find(a => a.id === accId);
   const accDocs = docs.filter(d => d[accKey] === accId).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
   let bal = Number(acc?.initial || 0);
-  const rows = accDocs.map(d => { bal += (d.type === 'P' ? 1 : -1) * Number(d.amount || 0); return { ...d, balance: bal }; });
+  const baseRows = accDocs.map(d => {
+    bal += (d.type === 'P' ? 1 : -1) * Number(d.amount || 0);
+    return {
+      ...d, balance: bal,
+      partnerName: (partners.find(p => p.id === d.partnerId) || {}).name || '',
+      typeName: d.type === 'P' ? 'Príjem' : 'Výdaj',
+      categoryName: (cats[d.type] || []).find(c => c.code === d.category)?.name || d.category || '',
+      inAmt: d.type === 'P' ? Number(d.amount || 0) : null,
+      outAmt: d.type === 'V' ? Number(d.amount || 0) : null
+    };
+  });
+  const [rows, sort, onSort] = useSort(baseRows);
 
   const saveDoc = async (e) => {
     e.preventDefault();
@@ -67,6 +80,7 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
       <PageHead title={title}>
         <button className="btn primary" disabled={!acc} onClick={() => setEdit({ type: 'P', date: today(), text: '', category: cats.P[0]?.code, amount: '', partnerId: '' })}>+ Príjem</button>
         <button className="btn primary" disabled={!acc} onClick={() => setEdit({ type: 'V', date: today(), text: '', category: cats.V[0]?.code, amount: '', partnerId: '' })}>− Výdaj</button>
+        {hasIban && <button className="btn primary" disabled={!acc} onClick={() => setImp(true)}>⬆ Import výpisu</button>}
       </PageHead>
 
       <div className="tabs">
@@ -89,21 +103,28 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
         <table className="grid">
           <thead>
             <tr>
-              <th>Doklad č.</th><th>Dátum</th><th>Typ</th><th>Partner</th><th>Text</th><th>Druh</th>
-              {hasIban && <th>VS</th>}
-              <th className="num">Príjem</th><th className="num">Výdaj</th><th className="num">Zostatok</th>
+              <SortTh label="Doklad č." k="number" sort={sort} onSort={onSort} />
+              <SortTh label="Dátum" k="date" type="date" sort={sort} onSort={onSort} />
+              <SortTh label="Typ" k="typeName" sort={sort} onSort={onSort} />
+              <SortTh label="Partner" k="partnerName" sort={sort} onSort={onSort} />
+              <SortTh label="Text" k="text" sort={sort} onSort={onSort} />
+              <SortTh label="Druh" k="categoryName" sort={sort} onSort={onSort} />
+              {hasIban && <SortTh label="VS" k="vs" sort={sort} onSort={onSort} />}
+              <SortTh label="Príjem" k="inAmt" type="num" className="num" sort={sort} onSort={onSort} />
+              <SortTh label="Výdaj" k="outAmt" type="num" className="num" sort={sort} onSort={onSort} />
+              <SortTh label="Zostatok" k="balance" type="num" className="num" sort={sort} onSort={onSort} />
             </tr>
           </thead>
           <tbody>
             {rows.map(r => (
-              <tr key={r.id} style={sel?.id === r.id ? { background: '#d9ecc2' } : {}}
+              <tr key={r.id} className={sel?.id === r.id ? 'sel' : ''}
                 onClick={() => setSel(r)} onDoubleClick={() => setEdit(r)}>
                 <td>{r.number}</td>
                 <td>{dt(r.date)}</td>
-                <td>{r.type === 'P' ? 'Príjem' : 'Výdaj'}</td>
-                <td>{(partners.find(p => p.id === r.partnerId) || {}).name || ''}</td>
+                <td>{r.typeName}</td>
+                <td>{r.partnerName}</td>
                 <td>{r.text}</td>
-                <td>{(cats[r.type] || []).find(c => c.code === r.category)?.name || r.category}</td>
+                <td>{r.categoryName}</td>
                 {hasIban && <td>{r.vs || ''}</td>}
                 <td className="num" style={{ color: '#5f9622' }}>{r.type === 'P' ? eur(r.amount) : ''}</td>
                 <td className="num" style={{ color: '#c0392b' }}>{r.type === 'V' ? eur(r.amount) : ''}</td>
@@ -115,6 +136,14 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
         </table>
       </div>
       <div className="grid-foot">{rows.length} dokladov • počiatočný stav {eur(acc?.initial)}</div>
+
+      {imp && (
+        <ImportStatement
+          accountId={accId}
+          onClose={() => setImp(false)}
+          onDone={() => { setImp(false); load(); }}
+        />
+      )}
 
       {edit && (
         <Modal title={edit.id ? 'Doklad ' + edit.number : (edit.type === 'P' ? 'Nový príjmový doklad' : 'Nový výdavkový doklad')} onClose={() => setEdit(null)}>
@@ -151,6 +180,9 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
         <Modal title={accEdit.id ? accLabel + ': ' + accEdit.name : 'Nová ' + accLabel.toLowerCase()} onClose={() => setAccEdit(null)}>
           <form onSubmit={saveAcc}>
             <Frow label="Názov" req><input value={accEdit.name} required onChange={e => setAccEdit(p => ({ ...p, name: e.target.value }))} /></Frow>
+            {hasIban && <Frow label="Banka"><input value={accEdit.bank || ''} placeholder="napr. Fio banka, a.s." onChange={e => setAccEdit(p => ({ ...p, bank: e.target.value }))} /></Frow>}
+            {hasIban && <Frow label="Číslo účtu"><input value={accEdit.number || ''} placeholder="napr. 2503152726/8330" onChange={e => setAccEdit(p => ({ ...p, number: e.target.value }))} /></Frow>}
+            {hasIban && <Frow label="SWIFT"><input value={accEdit.swift || ''} onChange={e => setAccEdit(p => ({ ...p, swift: e.target.value }))} /></Frow>}
             {hasIban && <Frow label="IBAN"><input value={accEdit.iban || ''} onChange={e => setAccEdit(p => ({ ...p, iban: e.target.value }))} /></Frow>}
             <Frow label="Počiatočný stav (€)"><input type="number" step="0.01" value={accEdit.initial} onChange={e => setAccEdit(p => ({ ...p, initial: e.target.value }))} /></Frow>
             <div className="form-actions">
