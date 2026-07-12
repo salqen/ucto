@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api, eur, dt, today } from '../api.js';
-import { PageHead, Modal, Frow } from '../components/ui.jsx';
+import { PageHead, Modal, Frow, useSort, SortTh } from '../components/ui.jsx';
 
 const STATES = ['nová', 'potvrdená', 'vybavená', 'zrušená'];
 const badge = s => s === 'nová' ? 'b-new' : s === 'potvrdená' ? 'b-ok' : s === 'vybavená' ? 'b-done' : 'b-cancel';
@@ -12,6 +12,8 @@ export default function Orders() {
   const [sel, setSel] = useState(null);
   const load = () => api.get('/orders').then(setRows);
   useEffect(() => { load(); api.get('/partners').then(setPartners); }, []);
+  const defaultSorted = [...rows].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const [shown, sort, onSort] = useSort(defaultSorted);
 
   const save = async (e) => {
     e.preventDefault();
@@ -35,10 +37,18 @@ export default function Orders() {
       </div>
       <div className="grid-wrap">
         <table className="grid">
-          <thead><tr><th>Doklad č.</th><th>Dátum</th><th>Partner</th><th>Predmet</th><th className="num">Suma</th><th>Stav</th><th>Poznámka</th></tr></thead>
+          <thead><tr>
+            <SortTh label="Doklad č." k="number" sort={sort} onSort={onSort} />
+            <SortTh label="Dátum" k="date" type="date" sort={sort} onSort={onSort} />
+            <SortTh label="Partner" k="partnerName" sort={sort} onSort={onSort} />
+            <SortTh label="Predmet" k="subject" sort={sort} onSort={onSort} />
+            <SortTh label="Suma" k="total" type="num" className="num" sort={sort} onSort={onSort} />
+            <SortTh label="Stav" k="state" sort={sort} onSort={onSort} />
+            <SortTh label="Poznámka" k="note" sort={sort} onSort={onSort} />
+          </tr></thead>
           <tbody>
-            {[...rows].sort((a, b) => (b.date || '').localeCompare(a.date || '')).map(r => (
-              <tr key={r.id} style={sel?.id === r.id ? { background: '#d9ecc2' } : {}} onClick={() => setSel(r)} onDoubleClick={() => setEdit(r)}>
+            {shown.map(r => (
+              <tr key={r.id} className={sel?.id === r.id ? 'sel' : ''} onClick={() => setSel(r)} onDoubleClick={() => setEdit(r)}>
                 <td>{r.number}</td><td>{dt(r.date)}</td><td>{r.partnerName}</td><td>{r.subject}</td>
                 <td className="num">{eur(r.total)}</td>
                 <td><span className={'badge ' + badge(r.state)}>{r.state}</span></td>
