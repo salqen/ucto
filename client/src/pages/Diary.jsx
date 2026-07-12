@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api, eur, dt } from '../api.js';
-import { PageHead } from '../components/ui.jsx';
+import { PageHead, useSort, SortTh } from '../components/ui.jsx';
 
 export default function Diary() {
   const [data, setData] = useState({ rows: [], initial: 0 });
@@ -8,7 +8,12 @@ export default function Diary() {
   const [type, setType] = useState('');
   useEffect(() => { api.get('/diary' + (year ? '?year=' + year : '')).then(setData); }, [year]);
 
-  const rows = data.rows.filter(r => !type || r.type === type);
+  const filtered = data.rows.filter(r => !type || r.type === type).map(r => ({
+    ...r,
+    inAmt: r.type === 'P' ? Number(r.amount || 0) : null,
+    outAmt: r.type === 'V' ? Number(r.amount || 0) : null
+  }));
+  const [rows, sort, onSort] = useSort(filtered);
   const inc = rows.filter(r => r.type === 'P').reduce((s, r) => s + Number(r.amount || 0), 0);
   const exp = rows.filter(r => r.type === 'V').reduce((s, r) => s + Number(r.amount || 0), 0);
   const years = [];
@@ -39,8 +44,15 @@ export default function Diary() {
         <table className="grid">
           <thead>
             <tr>
-              <th>Dátum</th><th>Doklad č.</th><th>Zdroj</th><th>Partner</th><th>Text</th>
-              <th>Druh</th><th className="num">Príjem</th><th className="num">Výdaj</th><th className="num">Zostatok</th>
+              <SortTh label="Dátum" k="date" type="date" sort={sort} onSort={onSort} />
+              <SortTh label="Doklad č." k="number" sort={sort} onSort={onSort} />
+              <SortTh label="Zdroj" k="srcName" sort={sort} onSort={onSort} />
+              <SortTh label="Partner" k="partnerName" sort={sort} onSort={onSort} />
+              <SortTh label="Text" k="text" sort={sort} onSort={onSort} />
+              <SortTh label="Druh" k="categoryName" sort={sort} onSort={onSort} />
+              <SortTh label="Príjem" k="inAmt" type="num" className="num" sort={sort} onSort={onSort} />
+              <SortTh label="Výdaj" k="outAmt" type="num" className="num" sort={sort} onSort={onSort} />
+              <SortTh label="Zostatok" k="balance" type="num" className="num" sort={sort} onSort={onSort} />
             </tr>
           </thead>
           <tbody>

@@ -1,6 +1,7 @@
 /* účtoERP - server (Express + KV/JSON databáza) */
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 const store = require('./store');
 
 const PORT = process.env.PORT || 3000;
@@ -20,6 +21,8 @@ const DEFAULT_DB = {
   products: [],
   stockmoves: [],
   orders: [],
+  users: [],
+  sessions: [],
   seq: {}
 };
 
@@ -97,6 +100,27 @@ function invoiceTotal(inv) {
 }
 function round2(n) { return Math.round(n * 100) / 100; }
 
+/* ---------- používateľské účty ---------- */
+function hashPw(password, salt) {
+  return crypto.createHash('sha256').update(salt + ':' + String(password)).digest('hex');
+}
+function publicUser(u) {
+  return u ? { id: u.id, name: u.name, email: u.email } : null;
+}
+function createSession(userId) {
+  const token = crypto.randomBytes(24).toString('hex');
+  db.sessions.push({ token, userId, created: new Date().toISOString() });
+  /* drž max. 50 relácií, nech databáza nerastie donekonečna */
+  if (db.sessions.length > 50) db.sessions = db.sessions.slice(-50);
+  return token;
+}
+function sessionUser(req) {
+  const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if (!token) return null;
+  const sess = (db.sessions || []).find(s => s.token === token);
+  return sess ? (db.users || []).find(u => u.id === sess.userId) || null : null;
+}
+
 /* ---------- app ---------- */
 const app = express();
 app.use(express.json({ limit: '5mb' }));
@@ -104,6 +128,93 @@ app.use(express.json({ limit: '5mb' }));
 /* načítaj databázu pred každou API požiadavkou (KV je zdieľaná medzi inštanciami) */
 app.use('/api', async (req, res, next) => {
   try { await ensureDb(); next(); } catch (e) { next(e); }
+});
+
+/* ochrana API: ak existujú používatelia, vyžaduje sa prihlásenie */
+app.use('/api', (req, res, next) => {
+  if (req.path.startsWith('/auth')) return next();
+  if (!(db.users || []).length) return next(); /* prvé spustenie bez účtov */
+  const user = sessionUser(req);
+  if (!user) return res.status(401).json({ error: 'Neprihlásený používateľ' });
+  req.user = user;
+  next();
+});
+
+/* ---------- autentifikácia ---------- */
+app.get('/api/auth/me', (req, res) => {
+  res.json({ user: publicUser(sessionUser(req)), required: (db.users || []).length > 0 });
+});
+
+app.post('/api/auth/register', async (req, res) => {
+  const { name, email, password } = req.body || {};
+  if (!name || !email || !password) return res.status(400).json({ error: 'Vyplňte meno, e-mail a heslo' });
+  if (String(password).length < 6) return res.status(400).json({ error: 'Heslo musí mať aspoň 6 znakov' });
+  const em = String(email).trim().toLowerCase();
+  if ((db.users || []).some(u => u.email === em)) return res.status(400).json({ error: 'Účet s týmto e-mailom už existuje' });
+  /* ďalší účet môže vytvoriť iba prihlásený používateľ */
+  if ((db.users || []).length && !sessionUser(req)) return res.status(401).json({ error: 'Nový účet môže vytvoriť len prihlásený používateľ' });
+  const salt = crypto.randomBytes(8).toString('hex');
+  const user = { id: nextId('users'), name: String(name).trim(), email: em, salt, pwHash: hashPw(password, salt), created: new Date().toISOString() };
+  db.users.push(user);
+  const token = createSession(user.id);
+  await saveDb();
+  res.json({ token, user: publicUser(user) });
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body || {};
+  const em = String(email || '').trim().toLowerCase();
+  const user = (db.users || []).find(u => u.email === em);
+  if (!user || user.pwHash !== hashPw(password, user.salt)) return res.status(401).json({ error: 'Nesprávny e-mail alebo heslo' });
+  const token = createSession(user.id);
+  await saveDb();
+  res.json({ token, user: publicUser(user) });
+});
+
+app.post('/api/auth/logout', async (req, res) => {
+  const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  db.sessions = (db.sessions || []).filter(s => s.token !== token);
+  await saveDb();
+  res.json({ ok: true });
+});
+
+/* zoznam používateľov (bez hesiel) */
+app.get('/api/auth/users', (req, res) => {
+  if ((db.users || []).length && !sessionUser(req)) return res.status(401).json({ error: 'Neprihlásený používateľ' });
+  res.json((db.users || []).map(publicUser));
+});
+
+/* zmazanie používateľa (nie seba samého) */
+app.delete('/api/auth/users/:id', async (req, res) => {
+  const me = sessionUser(req);
+  if (!me) return res.status(401).json({ error: 'Neprihlásený používateľ' });
+  const id = Number(req.params.id);
+  if (id === me.id) return res.status(400).json({ error: 'Vlastný účet nie je možné zmazať' });
+  db.users = db.users.filter(u => u.id !== id);
+  db.sessions = (db.sessions || []).filter(s => s.userId !== id);
+  await saveDb();
+  res.json({ ok: true });
+});
+
+/* nastavenia účtu (meno, e-mail, zmena hesla) */
+app.put('/api/auth/me', async (req, res) => {
+  const user = sessionUser(req);
+  if (!user) return res.status(401).json({ error: 'Neprihlásený používateľ' });
+  const { name, email, password, oldPassword } = req.body || {};
+  if (name) user.name = String(name).trim();
+  if (email) {
+    const em = String(email).trim().toLowerCase();
+    if (db.users.some(u => u.email === em && u.id !== user.id)) return res.status(400).json({ error: 'E-mail už používa iný účet' });
+    user.email = em;
+  }
+  if (password) {
+    if (user.pwHash !== hashPw(oldPassword || '', user.salt)) return res.status(400).json({ error: 'Nesprávne pôvodné heslo' });
+    if (String(password).length < 6) return res.status(400).json({ error: 'Nové heslo musí mať aspoň 6 znakov' });
+    user.salt = crypto.randomBytes(8).toString('hex');
+    user.pwHash = hashPw(password, user.salt);
+  }
+  await saveDb();
+  res.json({ user: publicUser(user) });
 });
 
 const COLLECTIONS =['partners', 'invoices', 'cashboxes', 'cashdocs', 'bankaccounts', 'bankmoves', 'products', 'stockmoves', 'orders'];
@@ -255,6 +366,35 @@ app.post('/api/invoices/:id/pay', async (req, res) => {
   inv.paid = round2((inv.paid || 0) + amt);
   await saveDb();
   res.json(inv);
+});
+
+/* import bankového výpisu -> bankové doklady + úhrada spárovaných faktúr */
+app.post('/api/bankmoves/import', async (req, res) => {
+  const { accountId, moves } = req.body || {};
+  const accId = Number(accountId) || (db.bankaccounts[0] && db.bankaccounts[0].id);
+  if (!accId) return res.status(400).json({ error: 'Chýba bankový účet' });
+  if (!Array.isArray(moves) || !moves.length) return res.status(400).json({ error: 'Žiadne pohyby na import' });
+  let created = 0, paired = 0;
+  for (const m of moves) {
+    const amt = round2(Math.abs(Number(m.amount) || 0));
+    if (!(amt > 0)) continue;
+    const type = m.type === 'V' ? 'V' : 'P';
+    const inv = m.invoiceId ? db.invoices.find(i => i.id === Number(m.invoiceId)) : null;
+    const category = m.category || (inv ? (inv.type === 'INO' ? 'UP' : 'OV') : (type === 'P' ? 'OP' : 'OV'));
+    const doc = {
+      id: nextId('bankmoves'), accountId: accId, type,
+      number: nextNumber('BV', m.date), date: m.date || new Date().toISOString().slice(0, 10),
+      partnerId: inv ? inv.partnerId : (m.partnerId ? Number(m.partnerId) : null),
+      text: m.text || (inv ? `Úhrada faktúry ${inv.number}` : 'Import výpisu'),
+      category, amount: amt, vs: m.vs || (inv ? inv.vs : ''),
+      invoiceId: inv ? inv.id : undefined
+    };
+    db.bankmoves.push(doc);
+    created++;
+    if (inv) { inv.paid = round2((inv.paid || 0) + amt); paired++; }
+  }
+  await saveDb();
+  res.json({ ok: true, created, paired });
 });
 
 /* generické CRUD */
