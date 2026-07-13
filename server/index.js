@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
 const store = require('./store');
+const { kontrola } = require('./kontrola');
 
 const PORT = process.env.PORT || 3000;
 
@@ -378,6 +379,15 @@ app.get('/api/vies/:vat', async (req, res) => {
     });
   } catch (e) {
     res.status(502).json({ error: 'Chyba spojenia s VIES: ' + e.message });
+  }
+});
+
+/* riziková previerka partnera podľa IČO (RÚZ + RPVS + insolvencia + exekúcie) */
+app.get('/api/kontrola/:ico', async (req, res) => {
+  try {
+    res.json(await kontrola(req.params.ico));
+  } catch (e) {
+    res.status(e.status || 502).json({ error: e.message });
   }
 });
 
