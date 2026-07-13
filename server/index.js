@@ -354,6 +354,33 @@ app.get('/api/ico/:ico', async (req, res) => {
   }
 });
 
+/* overenie IČ DPH cez VIES (Európska komisia) — vráti platnosť + oficiálny názov/adresu.
+   Prevzaté z ucto-git/components/ico-lookup (provider vies). */
+app.get('/api/vies/:vat', async (req, res) => {
+  const raw = String(req.params.vat || '').replace(/\s+/g, '').toUpperCase();
+  const m = raw.match(/^([A-Z]{2})?(\d+)$/);
+  if (!m) return res.status(400).json({ error: 'Neplatný tvar IČ DPH (napr. SK2020318813).' });
+  const country = m[1] || 'SK';
+  const number = m[2];
+  try {
+    const r = await fetch(`https://ec.europa.eu/taxation_customs/vies/rest-api/ms/${country}/vat/${number}`, {
+      headers: { Accept: 'application/json', 'User-Agent': 'ucto-erp/ico-lookup' }
+    });
+    if (!r.ok) return res.status(502).json({ error: 'VIES nedostupný (HTTP ' + r.status + ').' });
+    const d = await r.json();
+    const valid = !!(d.valid ?? d.isValid ?? false);
+    res.json({
+      valid,
+      icdph: country + number,
+      country,
+      name: d.name && d.name !== '---' ? d.name : '',
+      address: d.address && d.address !== '---' ? d.address : '',
+    });
+  } catch (e) {
+    res.status(502).json({ error: 'Chyba spojenia s VIES: ' + e.message });
+  }
+});
+
 /* firmy (vracia len firmy, na ktoré má používateľ oprávnenie, aj s rolou) */
 app.get('/api/firms', (req, res) => {
   const u = req.user || sessionUser(req);

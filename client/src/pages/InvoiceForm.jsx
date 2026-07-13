@@ -2,8 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, eur, dt, today } from '../api.js';
 import { Section, Frow, PageHead } from '../components/ui.jsx';
-import { encode as encodeBySquare } from 'bysquare/pay';
-import QRCode from 'qrcode';
+import { qrDataUrl } from '../integrations/paybysquare.js';
 
 const emptyItem = () => ({ code: '', name: '', qty: 1, unit: 'ks', price: 0, vat: 23 });
 /* formát čísel v tlačovej podobe (ako keepi): množstvo a JC na 5 des. miest */
@@ -103,32 +102,18 @@ export default function InvoiceForm() {
 
   const partner = partners.find(p => p.id === Number(inv.partnerId));
 
-  /* platobný QR kód (PAY by square) na vyšlej faktúre */
+  /* platobný QR kód (PAY by square) na vyšlej faktúre — cez integračný modul (validácia IBAN + varovania) */
   const [qrUrl, setQrUrl] = useState('');
   useEffect(() => {
     if (!showPrint || !isOut || !settings) { setQrUrl(''); return; }
     const bank = bankAccounts.find(a => a.id === Number(inv.bankAccountId)) || bankAccounts[0];
-    const iban = String(bank?.iban || '').replace(/\s/g, '').toUpperCase();
     const amount = Math.round(totals.total * 100) / 100;
-    if (!iban || !(amount > 0)) { setQrUrl(''); return; }
-    try {
-      const qrString = encodeBySquare({
-        invoiceId: inv.number || undefined,
-        payments: [{
-          type: 1,
-          amount,
-          currencyCode: inv.currency || 'EUR',
-          variableSymbol: String(inv.vs || '').replace(/\D/g, '').slice(0, 10) || undefined,
-          constantSymbol: String(inv.ks || '').replace(/\D/g, '').slice(0, 4) || undefined,
-          paymentDueDate: /^\d{4}-\d{2}-\d{2}$/.test(inv.dueDate || '') ? inv.dueDate.replace(/-/g, '') : undefined,
-          paymentNote: ('Faktúra ' + (inv.number || '')).trim(),
-          bankAccounts: [{ iban }],
-          beneficiary: { name: settings.company?.name || '' }
-        }]
-      });
-      QRCode.toDataURL(qrString, { margin: 1, width: 240, errorCorrectionLevel: 'M' })
-        .then(setQrUrl).catch(() => setQrUrl(''));
-    } catch { setQrUrl(''); }
+    const company = { name: settings.company?.name || '', iban: bank?.iban || '' };
+    let cancelled = false;
+    qrDataUrl(inv, company, { amount })
+      .then(res => { if (!cancelled) setQrUrl(res.dataUrl); })
+      .catch(() => { if (!cancelled) setQrUrl(''); });
+    return () => { cancelled = true; };
   }, [showPrint, isOut, settings, bankAccounts, inv.bankAccountId, inv.number, inv.vs, inv.ks, inv.dueDate, inv.currency, totals.total]);
 
   if (showPrint && settings) {

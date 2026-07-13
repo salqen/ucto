@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { api, eur, dt } from '../api.js';
 import { Modal, Frow } from './ui.jsx';
+import { parseCamt053, invoiceRemaining } from '../integrations/bankmatch.js';
 
 /* ================= parsovanie výpisu ================= */
 
@@ -54,36 +55,20 @@ function guessMapping(header) {
   };
 }
 
-/* camt.053 / camt.052 XML (SEPA výpis) */
+/* camt.053 / camt.052 XML (SEPA výpis) — parsuje spoločný modul bankmatch (regex, extrahuje aj SS/KS/IBAN) */
 function parseCamt(text) {
-  const doc = new DOMParser().parseFromString(text, 'application/xml');
-  const get = (el, tag) => el.getElementsByTagNameNS('*', tag)[0];
-  const entries = [...doc.getElementsByTagNameNS('*', 'Ntry')];
-  return entries.map(e => {
-    const amtEl = get(e, 'Amt');
-    const amount = Number(amtEl ? amtEl.textContent.replace(',', '.') : 0) || 0;
-    const cd = (get(e, 'CdtDbtInd') || {}).textContent || 'CRDT';
-    const dtEl = get(e, 'BookgDt') || get(e, 'ValDt');
-    const date = dtEl ? parseDate((get(dtEl, 'Dt') || get(dtEl, 'DtTm') || {}).textContent || '') : '';
-    /* VS: EndToEndId alebo referencia veriteľa (/VS.../) */
-    let vs = '';
-    const e2e = (get(e, 'EndToEndId') || {}).textContent || '';
-    const ref = (get(e, 'Ref') || {}).textContent || '';
-    const mVs = (e2e + ' ' + ref).match(/\/?VS:?(\d{1,10})/i) || String(e2e).match(/^(\d{1,10})$/);
-    if (mVs) vs = mVs[1];
-    const ustrd = [...e.getElementsByTagNameNS('*', 'Ustrd')].map(u => u.textContent).join(' ');
-    const nm = (get(e, 'RltdPties') && get(get(e, 'RltdPties'), 'Nm')) ? get(get(e, 'RltdPties'), 'Nm').textContent : '';
-    let iban = '';
-    const rp = get(e, 'RltdPties');
-    if (rp) { const ib = get(rp, 'IBAN'); if (ib) iban = ib.textContent; }
-    return {
-      date, amount: Math.abs(amount),
-      type: cd === 'DBIT' ? 'V' : 'P',
-      vs, iban: iban.replace(/\s/g, ''),
-      text: (ustrd || nm || 'Import výpisu').trim().slice(0, 120)
-    };
-  }).filter(r => r.amount > 0);
+  return parseCamt053(text).map(t => ({
+    date: t.date,
+    amount: Math.abs(t.amount),
+    type: t.side === 'debit' ? 'V' : 'P',
+    vs: t.vs || '',
+    iban: (t.counterpartyIban || '').replace(/\s/g, ''),
+    text: (t.counterpartyName || t.ref || 'Import výpisu').trim().slice(0, 120)
+  })).filter(r => r.amount > 0);
 }
+
+/* farba podľa istoty párovania */
+const CONF_COLOR = { 'vysoká': '#5f9622', 'stredná': '#d4a012', 'nízka': '#c0392b' };
 
 /* ================= komponent ================= */
 export default function ImportStatement({ accountId, onClose, onDone }) {
@@ -145,24 +130,40 @@ export default function ImportStatement({ accountId, onClose, onDone }) {
     prepare(data);
   };
 
-  /* párovanie s faktúrami + duplicitné pohyby */
+  /* párovanie s faktúrami (VS → suma → IBAN, s úrovňou istoty) + duplicitné pohyby */
   const prepare = (data) => {
     setErr('');
-    const remaining = {}; /* zostatok faktúr počas párovania */
-    const unpaidList = invoices.filter(i => (i.total - (i.paid || 0)) > 0.004);
-    for (const i of unpaidList) remaining[i.id] = i.total - (i.paid || 0);
+    const remaining = {}; /* zostatok faktúr počas párovania (sekvenčná alokácia) */
+    const unpaidList = invoices.filter(i => invoiceRemaining(i) > 0.004);
+    for (const i of unpaidList) remaining[i.id] = invoiceRemaining(i);
+    const partnerIbanOf = (i) => {
+      const p = partners.find(pp => pp.id === i.partnerId);
+      return p ? String(p.iban || '').replace(/\s/g, '') : '';
+    };
     const stripZeros = v => String(v || '').replace(/^0+/, '');
     const enriched = data.map((r, ix) => {
       const dir = r.type === 'P' ? 'INO' : 'INI';
       const cands = unpaidList.filter(i => i.type === dir && remaining[i.id] > 0.004);
-      let inv = null, by = '';
-      if (r.vs) {
-        inv = cands.find(i => stripZeros(i.vs) === stripZeros(r.vs));
-        if (inv) by = 'VS';
-      }
-      if (!inv) {
-        const eq = cands.filter(i => Math.abs(remaining[i.id] - r.amount) < 0.005);
-        if (eq.length === 1) { inv = eq[0]; by = 'suma'; }
+      const amountFits = (i) => Math.abs(remaining[i.id] - r.amount) < 0.005;
+      let inv = null, by = '', confidence = 'žiadna';
+
+      const byVs = r.vs ? cands.filter(i => stripZeros(i.vs) === stripZeros(r.vs)) : [];
+      if (byVs.length === 1) {
+        inv = byVs[0];
+        confidence = amountFits(inv) ? 'vysoká' : 'stredná';
+        by = amountFits(inv) ? 'VS + suma' : 'VS (suma sa líši)';
+      } else if (byVs.length > 1) {
+        const exact = byVs.find(amountFits);
+        inv = exact || byVs[0];
+        confidence = exact ? 'vysoká' : 'nízka';
+        by = exact ? 'VS + suma' : 'viac faktúr s rovnakým VS';
+      } else {
+        const bySum = cands.filter(amountFits);
+        if (bySum.length === 1) { inv = bySum[0]; confidence = 'stredná'; by = 'zhoda sumy'; }
+        else if (bySum.length > 1 && r.iban) {
+          const ibanHit = bySum.filter(i => partnerIbanOf(i) && partnerIbanOf(i) === r.iban);
+          if (ibanHit.length === 1) { inv = ibanHit[0]; confidence = 'stredná'; by = 'suma + IBAN'; }
+        }
       }
       if (inv) remaining[inv.id] = Math.max(0, remaining[inv.id] - r.amount);
       const partner = r.iban ? partners.find(p => String(p.iban || '').replace(/\s/g, '') === r.iban) : null;
@@ -170,7 +171,7 @@ export default function ImportStatement({ accountId, onClose, onDone }) {
         && (r.vs ? String(b.vs || '') === r.vs : (b.text || '') === r.text));
       return {
         ...r, key: ix,
-        invoiceId: inv ? inv.id : null, invoiceNo: inv ? inv.number : '', matchBy: by,
+        invoiceId: inv ? inv.id : null, invoiceNo: inv ? inv.number : '', matchBy: by, confidence,
         partnerId: partner ? partner.id : null,
         category: r.type === 'P' ? 'OP' : 'OV',
         dup, checked: !dup
@@ -202,6 +203,7 @@ export default function ImportStatement({ accountId, onClose, onDone }) {
 
   const selCount = rows.filter(r => r.checked).length;
   const pairCount = rows.filter(r => r.checked && r.invoiceId).length;
+  const confCounts = rows.reduce((a, r) => { if (r.checked && r.invoiceId) a[r.confidence] = (a[r.confidence] || 0) + 1; return a; }, {});
   const COLS = csv ? csv[0].map((h, i) => ({ i, label: (hasHeader ? h : 'Stĺpec ' + (i + 1)) || ('Stĺpec ' + (i + 1)) })) : [];
   const colSel = (k) => (
     <select value={map[k]} onChange={e => setMap(p => ({ ...p, [k]: Number(e.target.value) }))}>
@@ -260,6 +262,13 @@ export default function ImportStatement({ accountId, onClose, onDone }) {
         <div>
           <div style={{ marginBottom: 8, fontSize: 12 }}>
             {rows.length} pohybov • vybraných <b>{selCount}</b> • spárovaných s faktúrami <b style={{ color: '#5f9622' }}>{pairCount}</b>
+            {pairCount > 0 && (
+              <span className="hint" style={{ margin: '0 0 0 4px' }}>
+                (istota: <span style={{ color: CONF_COLOR['vysoká'] }}>● vysoká {confCounts['vysoká'] || 0}</span>,{' '}
+                <span style={{ color: CONF_COLOR['stredná'] }}>● stredná {confCounts['stredná'] || 0}</span>,{' '}
+                <span style={{ color: CONF_COLOR['nízka'] }}>● nízka {confCounts['nízka'] || 0}</span> — skontrolujte)
+              </span>
+            )}
             {rows.some(r => r.dup) && <span style={{ color: '#c0392b' }}> • šedé riadky vyzerajú ako už zaúčtované (duplicita)</span>}
           </div>
           <div style={{ maxHeight: '48vh', overflow: 'auto', border: '1px solid #ddd' }}>
@@ -281,8 +290,9 @@ export default function ImportStatement({ accountId, onClose, onDone }) {
                     <td>
                       {r.invoiceId ? (
                         <span>
-                          ✓ <b>{r.invoiceNo}</b> <span className="hint" style={{ margin: 0 }}>(podľa {r.matchBy})</span>{' '}
-                          <a style={{ color: '#c0392b', cursor: 'pointer' }} onClick={() => setRow(r.key, { invoiceId: null, invoiceNo: '', matchBy: '' })}>✕</a>
+                          <span title={'Istota párovania: ' + (r.confidence || '')} style={{ color: CONF_COLOR[r.confidence] || '#888' }}>●</span>{' '}
+                          <b>{r.invoiceNo}</b> <span className="hint" style={{ margin: 0 }}>(podľa {r.matchBy})</span>{' '}
+                          <a style={{ color: '#c0392b', cursor: 'pointer' }} onClick={() => setRow(r.key, { invoiceId: null, invoiceNo: '', matchBy: '', confidence: 'žiadna' })}>✕</a>
                         </span>
                       ) : (
                         <select value={r.category} onChange={e => setRow(r.key, { category: e.target.value })}>

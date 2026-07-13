@@ -11,6 +11,8 @@ export default function Partners() {
   const [sel, setSel] = useState(null);
   const [icoBusy, setIcoBusy] = useState(false);
   const [icoMsg, setIcoMsg] = useState('');
+  const [viesBusy, setViesBusy] = useState(false);
+  const [viesMsg, setViesMsg] = useState('');
   const load = () => api.get('/partners').then(setRows);
   useEffect(() => { load(); }, []);
 
@@ -29,6 +31,23 @@ export default function Partners() {
       setIcoMsg('✓ ' + d.name);
     } catch (e) { setIcoMsg('⚠ ' + e.message); }
     finally { setIcoBusy(false); }
+  };
+
+  /* overenie IČ DPH cez VIES (EÚ) — potvrdí platnosť a doplní oficiálny názov/adresu */
+  const verifyVat = async () => {
+    const vat = String(edit.icdph || '').replace(/\s+/g, '');
+    if (!vat) { setViesMsg('⚠ Zadajte IČ DPH (napr. SK2020318813).'); return; }
+    setViesBusy(true); setViesMsg('');
+    try {
+      const d = await api.get('/vies/' + vat);
+      if (d.valid) {
+        setEdit(p => ({ ...p, icdph: d.icdph || p.icdph, name: (!p.name && d.name) ? d.name : p.name }));
+        setViesMsg('✓ Platné IČ DPH' + (d.name ? ' — ' + d.name : ''));
+      } else {
+        setViesMsg('⚠ IČ DPH nie je v systéme VIES platné.');
+      }
+    } catch (e) { setViesMsg('⚠ ' + e.message); }
+    finally { setViesBusy(false); }
   };
 
   const save = async (e) => {
@@ -101,7 +120,15 @@ export default function Partners() {
             </Frow>
             {icoMsg && <div style={{ fontSize: 12, color: icoMsg.startsWith('✓') ? '#2a8f4f' : '#c0392b', padding: '0 0 6px' }}>{icoMsg}</div>}
             {F('dic', 'DIČ')}
-            {F('icdph', 'IČ DPH')}
+            <Frow label="IČ DPH">
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input value={edit.icdph || ''} onChange={e => setEdit(p => ({ ...p, icdph: e.target.value }))} />
+                <button type="button" className="btn" style={{ whiteSpace: 'nowrap' }} onClick={verifyVat} disabled={viesBusy}>
+                  {viesBusy ? '…' : '✔ Overiť (VIES)'}
+                </button>
+              </div>
+            </Frow>
+            {viesMsg && <div style={{ fontSize: 12, color: viesMsg.startsWith('✓') ? '#2a8f4f' : '#c0392b', padding: '0 0 6px' }}>{viesMsg}</div>}
             {F('street', 'Ulica a číslo')}
             {F('city', 'Mesto')}
             {F('zip', 'PSČ')}
