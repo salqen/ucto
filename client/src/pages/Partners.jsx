@@ -9,8 +9,27 @@ export default function Partners() {
   const [filter, setFilter] = useState('');
   const [edit, setEdit] = useState(null);
   const [sel, setSel] = useState(null);
+  const [icoBusy, setIcoBusy] = useState(false);
+  const [icoMsg, setIcoMsg] = useState('');
   const load = () => api.get('/partners').then(setRows);
   useEffect(() => { load(); }, []);
+
+  /* doplnenie údajov partnera z registra firiem (RPO) podľa IČO */
+  const lookupIco = async () => {
+    const ico = String(edit.ico || '').replace(/\D/g, '');
+    if (ico.length < 6) { setIcoMsg('⚠ Zadajte IČO (6–8 číslic).'); return; }
+    setIcoBusy(true); setIcoMsg('');
+    try {
+      const d = await api.get('/ico/' + ico);
+      setEdit(p => ({
+        ...p, ico: d.ico || p.ico, name: d.name || p.name,
+        street: d.street || p.street, city: d.city || p.city,
+        zip: d.zip || p.zip, country: d.country || p.country,
+      }));
+      setIcoMsg('✓ ' + d.name);
+    } catch (e) { setIcoMsg('⚠ ' + e.message); }
+    finally { setIcoBusy(false); }
+  };
 
   const save = async (e) => {
     e.preventDefault();
@@ -72,7 +91,15 @@ export default function Partners() {
         <Modal title={edit.id ? 'Partner: ' + edit.name : 'Nový partner'} onClose={() => setEdit(null)}>
           <form onSubmit={save}>
             {F('name', 'Názov / meno', true)}
-            {F('ico', 'IČO')}
+            <Frow label="IČO">
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input value={edit.ico || ''} onChange={e => setEdit(p => ({ ...p, ico: e.target.value }))} />
+                <button type="button" className="btn" style={{ whiteSpace: 'nowrap' }} onClick={lookupIco} disabled={icoBusy}>
+                  {icoBusy ? '…' : '🔎 Z registra'}
+                </button>
+              </div>
+            </Frow>
+            {icoMsg && <div style={{ fontSize: 12, color: icoMsg.startsWith('✓') ? '#2a8f4f' : '#c0392b', padding: '0 0 6px' }}>{icoMsg}</div>}
             {F('dic', 'DIČ')}
             {F('icdph', 'IČ DPH')}
             {F('street', 'Ulica a číslo')}

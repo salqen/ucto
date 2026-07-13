@@ -15,6 +15,8 @@ import Closing from './pages/Closing.jsx';
 import Manager from './pages/Manager.jsx';
 import Overview from './pages/Overview.jsx';
 import Settings from './pages/Settings.jsx';
+import Reminders from './pages/Reminders.jsx';
+import Recurring from './pages/Recurring.jsx';
 
 function TbMenu({ label, children }) {
   const [open, setOpen] = useState(false);
@@ -163,6 +165,8 @@ export default function App() {
             <Link to="/">🏠 Úvod</Link>
             <Link to="/faktury/vysle">🗎 Vyšlé faktúry</Link>
             <Link to="/faktury/dosle">🗎 Došlé faktúry</Link>
+            <Link to="/pripomienky">🔔 Pripomienky</Link>
+            <Link to="/pravidelne">🔁 Pravidelné faktúry</Link>
             <Link to="/partneri">👥 Partneri</Link>
             <Link to="/dennik">📓 Peňažný denník</Link>
             <Link to="/pokladna">💶 Pokladňa</Link>
@@ -207,6 +211,8 @@ export default function App() {
               <Route path="/faktury/:type/nova" element={<InvoiceForm />} />
               <Route path="/faktury/:type/:id" element={<InvoiceForm />} />
               <Route path="/partneri" element={<Partners />} />
+              <Route path="/pripomienky" element={<Reminders />} />
+              <Route path="/pravidelne" element={<Recurring />} />
               <Route path="/dennik" element={<Diary />} />
               <Route path="/pokladna" element={<CashBook />} />
               <Route path="/banka" element={<Bank />} />

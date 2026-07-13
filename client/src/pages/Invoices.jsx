@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api, eur, dt, today } from '../api.js';
 import { PageHead, Modal, Frow, useSort, SortTh } from '../components/ui.jsx';
 import ScanInvoice from '../components/ScanInvoice.jsx';
+import { buildIsdoc, isdocFilename } from '../integrations/isdoc.js';
+import { exportInvoices, downloadBlob } from '../integrations/bridges.js';
+import { buildReminder } from '../integrations/reminders.js';
 
 export default function Invoices({ type }) {
   const nav = useNavigate();
@@ -15,6 +18,9 @@ export default function Invoices({ type }) {
   const [scan, setScan] = useState(false);
   const [cashboxes, setCashboxes] = useState([]);
   const [accounts, setAccounts] = useState([]);
+  const [company, setCompany] = useState({});
+  const [partners, setPartners] = useState([]);
+  const [reminder, setReminder] = useState(null);
   const isOut = type === 'INO';
   const title = isOut ? 'Zoznam vyšlých faktúr' : 'Zoznam došlých faktúr';
 
@@ -26,7 +32,28 @@ export default function Invoices({ type }) {
   useEffect(() => {
     api.get('/cashboxes').then(setCashboxes);
     api.get('/bankaccounts').then(setAccounts);
+    api.get('/settings').then(s => setCompany(s.company || {})).catch(() => {});
+    api.get('/partners').then(setPartners).catch(() => {});
   }, []);
+
+  const resolveCustomer = (inv) => partners.find(p => p.id === inv.partnerId) || { name: inv.partnerName };
+  const supplierOf = (inv) => (isOut ? { ...company } : resolveCustomer(inv));
+  const customerOf = (inv) => (isOut ? resolveCustomer(inv) : { ...company });
+
+  const exportIsdoc = () => {
+    if (!sel) return;
+    const xml = buildIsdoc({ invoice: sel, supplier: supplierOf(sel), customer: customerOf(sel) });
+    downloadBlob(xml, isdocFilename(sel), 'application/xml;charset=utf-8');
+  };
+  const exportBridge = (format) => {
+    const list = (sel ? [sel] : shown);
+    const { content, filename, mime } = exportInvoices(list, { format, supplier: company, resolveCustomer });
+    downloadBlob(content, filename, mime);
+  };
+  const openReminder = () => {
+    if (!sel) return;
+    setReminder(buildReminder(sel, { supplier: company, customer: resolveCustomer(sel), today: today() }));
+  };
 
   const filtered = rows.filter(r =>
     !filter || (r.number + ' ' + (r.partnerName || '') + ' ' + (r.vs || '')).toLowerCase().includes(filter.toLowerCase())
@@ -61,6 +88,11 @@ export default function Invoices({ type }) {
         <button className="btn" disabled={!sel || sel.paid >= sel.total} onClick={() => setPay(sel)}>Úhrada faktúry</button>
         <button className="btn" disabled={!sel} onClick={() => { nav(`/faktury/${type}/${sel.id}?print=1`); }}>Tlač</button>
         <button className="btn danger" disabled={!sel} onClick={del}>Zmazať</button>
+        {isOut && <button className="btn" disabled={!sel || (sel.total - (sel.paid || 0)) <= 0} onClick={openReminder} title="Vygenerovať text upomienky">✉ Upomienka</button>}
+        <span style={{ width: 1, alignSelf: 'stretch', background: 'var(--border,#ddd)', margin: '0 4px' }} />
+        <button className="btn" disabled={!sel} onClick={exportIsdoc} title="Export vybranej faktúry do ISDOC">⇩ ISDOC</button>
+        <button className="btn" onClick={() => exportBridge('pohoda')} title="Export (vybraná alebo všetky) do POHODA XML">⇩ POHODA</button>
+        <button className="btn" onClick={() => exportBridge('csv')} title="Export (vybraná alebo všetky) do CSV">⇩ CSV</button>
       </div>
       <div className="filter-row">
         <label>Obdobie</label>
@@ -132,6 +164,20 @@ export default function Invoices({ type }) {
             nav('/faktury/INI/nova?scan=1');
           }}
         />
+      )}
+
+      {reminder && (
+        <Modal title={reminder.subject} onClose={() => setReminder(null)} wide>
+          <textarea readOnly rows={16} value={reminder.body} style={{ width: '100%', fontFamily: 'inherit', fontSize: 13 }} />
+          <div className="form-actions">
+            <button className="btn primary" type="button" onClick={() => { navigator.clipboard?.writeText(reminder.body); }}>📋 Kopírovať</button>
+            <button className="btn" type="button" onClick={() => {
+              const to = (sel && (partners.find(p => p.id === sel.partnerId) || {}).email) || '';
+              window.location.href = `mailto:${to}?subject=${encodeURIComponent(reminder.subject)}&body=${encodeURIComponent(reminder.body)}`;
+            }}>✉ Odoslať e-mailom</button>
+            <button className="btn" type="button" onClick={() => setReminder(null)}>Zavrieť</button>
+          </div>
+        </Modal>
       )}
 
       {pay && (

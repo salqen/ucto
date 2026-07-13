@@ -22,6 +22,7 @@ const DEFAULT_FIRM = {
   products: [],
   stockmoves: [],
   orders: [],
+  recurring: [],
   seq: {}
 };
 const FIRM_KEYS = Object.keys(DEFAULT_FIRM);
@@ -306,10 +307,52 @@ app.put('/api/auth/me', async (req, res) => {
   res.json({ user: publicUser(user) });
 });
 
-const COLLECTIONS =['partners', 'invoices', 'cashboxes', 'cashdocs', 'bankaccounts', 'bankmoves', 'products', 'stockmoves', 'orders'];
+const COLLECTIONS =['partners', 'invoices', 'cashboxes', 'cashdocs', 'bankaccounts', 'bankmoves', 'products', 'stockmoves', 'orders', 'recurring'];
 
 /* číselníky */
 app.get('/api/categories', (req, res) => res.json(CATEGORIES));
+
+/* ---------- register firiem (RPO – Štatistický úrad SR) podľa IČO ---------- */
+function rpoPickCurrent(items) {
+  if (!Array.isArray(items) || !items.length) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  const active = items.filter(x => !x.validTo || x.validTo >= today);
+  const pool = active.length ? active : items;
+  return pool.slice().sort((a, b) => String(b.validFrom || '').localeCompare(String(a.validFrom || '')))[0];
+}
+function rpoMap(entity) {
+  if (!entity) return null;
+  const name = rpoPickCurrent(entity.fullNames);
+  const addr = rpoPickCurrent(entity.addresses);
+  const ico = (rpoPickCurrent(entity.identifiers) || (entity.identifiers || [])[0] || {}).value || '';
+  const num = addr && (addr.buildingNumber || (addr.regNumber ? String(addr.regNumber) : '')) || '';
+  return {
+    ico: String(ico).replace(/\D/g, '').padStart(8, '0'),
+    name: name ? name.value : '',
+    street: addr ? [addr.street, num].filter(Boolean).join(' ').trim() : '',
+    city: addr && addr.municipality ? addr.municipality.value : '',
+    zip: addr && Array.isArray(addr.postalCodes) && addr.postalCodes[0]
+      ? String(addr.postalCodes[0]).replace(/(\d{3})(\d{2})/, '$1 $2') : '',
+    country: addr && addr.country ? addr.country.value : 'Slovenská republika',
+    dic: '', icdph: ''
+  };
+}
+app.get('/api/ico/:ico', async (req, res) => {
+  const ico = String(req.params.ico || '').replace(/\D/g, '');
+  if (ico.length < 6 || ico.length > 8) return res.status(400).json({ error: 'Neplatné IČO (6–8 číslic).' });
+  try {
+    const r = await fetch(`https://api.statistics.sk/rpo/v1/search?identifier=${ico}`, {
+      headers: { Accept: 'application/json', 'User-Agent': 'ucto-erp/ico-lookup' }
+    });
+    if (!r.ok) return res.status(502).json({ error: 'Register RPO nedostupný (HTTP ' + r.status + ').' });
+    const data = await r.json();
+    const results = (data && data.results) || [];
+    if (!results.length) return res.status(404).json({ error: 'Pre IČO ' + ico + ' sa nič nenašlo.' });
+    res.json(rpoMap(results[0]));
+  } catch (e) {
+    res.status(502).json({ error: 'Chyba spojenia s registrom: ' + e.message });
+  }
+});
 
 /* firmy (vracia len firmy, na ktoré má používateľ oprávnenie, aj s rolou) */
 app.get('/api/firms', (req, res) => {
