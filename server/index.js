@@ -4,6 +4,8 @@ const path = require('path');
 const crypto = require('crypto');
 const store = require('./store');
 const { kontrola } = require('./kontrola');
+const rpo = require('./rpo');
+const orsr = require('./orsr');
 
 const PORT = process.env.PORT || 3000;
 
@@ -346,14 +348,9 @@ app.get('/api/ico/:ico', async (req, res) => {
   const ico = String(req.params.ico || '').replace(/\D/g, '');
   if (ico.length < 6 || ico.length > 8) return res.status(400).json({ error: 'Neplatné IČO (6–8 číslic).' });
   try {
-    const r = await fetch(`https://api.statistics.sk/rpo/v1/search?identifier=${ico}`, {
-      headers: { Accept: 'application/json', 'User-Agent': 'ucto-erp/ico-lookup' }
-    });
-    if (!r.ok) return res.status(502).json({ error: 'Register RPO nedostupný (HTTP ' + r.status + ').' });
-    const data = await r.json();
-    const results = (data && data.results) || [];
-    if (!results.length) return res.status(404).json({ error: 'Pre IČO ' + ico + ' sa nič nenašlo.' });
-    res.json(rpoMap(results[0]));
+    const d = await rpo.byIco(ico);
+    if (!d) return res.status(404).json({ error: 'Pre IČO ' + ico + ' sa nič nenašlo.' });
+    res.json(d);
   } catch (e) {
     res.status(502).json({ error: 'Chyba spojenia s registrom: ' + e.message });
   }
@@ -384,6 +381,29 @@ app.get('/api/vies/:vat', async (req, res) => {
   } catch (e) {
     res.status(502).json({ error: 'Chyba spojenia s VIES: ' + e.message });
   }
+});
+
+/* RPO — vyhľadanie partnera (firmy aj živnostníci) podľa názvu alebo IČO */
+app.get('/api/rpo/search', async (req, res) => {
+  try { res.json(await rpo.byName(req.query.q || '', 15)); }
+  catch (e) { res.status(502).json({ error: 'RPO nedostupný: ' + e.message }); }
+});
+app.get('/api/rpo/ico/:ico', async (req, res) => {
+  try {
+    const d = await rpo.byIco(req.params.ico);
+    if (!d) return res.status(404).json({ error: 'V RPO sa pre toto IČO nič nenašlo.' });
+    res.json(d);
+  } catch (e) { res.status(502).json({ error: 'RPO nedostupný: ' + e.message }); }
+});
+
+/* ORSR (doplnok k RPO) — hľadá firmu podľa názvu aj podľa mena konateľa/spoločníka */
+app.get('/api/orsr/search', async (req, res) => {
+  try { res.json(await orsr.searchAll(req.query.q || '')); }
+  catch (e) { res.status(502).json({ error: 'ORSR nedostupný: ' + e.message }); }
+});
+app.get('/api/orsr/detail', async (req, res) => {
+  try { res.json(await orsr.detail(req.query.id, req.query.sid)); }
+  catch (e) { res.status(502).json({ error: 'ORSR nedostupný: ' + e.message }); }
 });
 
 /* riziková previerka partnera podľa IČO (RÚZ + RPVS + insolvencia + exekúcie) */
