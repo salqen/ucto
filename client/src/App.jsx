@@ -17,6 +17,8 @@ import Overview from './pages/Overview.jsx';
 import Settings from './pages/Settings.jsx';
 import Reminders from './pages/Reminders.jsx';
 import Recurring from './pages/Recurring.jsx';
+import Documents from './pages/Documents.jsx';
+import DocForm from './pages/DocForm.jsx';
 
 function TbMenu({ label, children }) {
   const [open, setOpen] = useState(false);
@@ -165,6 +167,10 @@ export default function App() {
             <Link to="/">🏠 Úvod</Link>
             <Link to="/faktury/vysle">🗎 Vyšlé faktúry</Link>
             <Link to="/faktury/dosle">🗎 Došlé faktúry</Link>
+            <Link to="/ponuky/vysle">📄 Cenové ponuky (vyšlé)</Link>
+            <Link to="/ponuky/dosle">📄 Cenové ponuky (došlé)</Link>
+            <Link to="/dodacie-listy/vysle">📦 Dodacie listy (vyšlé)</Link>
+            <Link to="/dodacie-listy/dosle">📦 Dodacie listy (došlé)</Link>
             <Link to="/pripomienky">🔔 Pripomienky</Link>
             <Link to="/pravidelne">🔁 Pravidelné faktúry</Link>
             <Link to="/partneri">👥 Partneri</Link>
@@ -210,6 +216,14 @@ export default function App() {
               <Route path="/faktury/dosle" element={<Invoices type="INI" key="INI" />} />
               <Route path="/faktury/:type/nova" element={<InvoiceForm />} />
               <Route path="/faktury/:type/:id" element={<InvoiceForm />} />
+              <Route path="/ponuky/vysle" element={<Documents kind="quotes" type="O" key="qO" />} />
+              <Route path="/ponuky/dosle" element={<Documents kind="quotes" type="I" key="qI" />} />
+              <Route path="/ponuky/:type/nova" element={<DocForm kind="quotes" />} />
+              <Route path="/ponuky/:type/:id" element={<DocForm kind="quotes" />} />
+              <Route path="/dodacie-listy/vysle" element={<Documents kind="deliverynotes" type="O" key="dO" />} />
+              <Route path="/dodacie-listy/dosle" element={<Documents kind="deliverynotes" type="I" key="dI" />} />
+              <Route path="/dodacie-listy/:type/nova" element={<DocForm kind="deliverynotes" />} />
+              <Route path="/dodacie-listy/:type/:id" element={<DocForm kind="deliverynotes" />} />
               <Route path="/partneri" element={<Partners />} />
               <Route path="/pripomienky" element={<Reminders />} />
               <Route path="/pravidelne" element={<Recurring />} />

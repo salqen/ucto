@@ -6,6 +6,7 @@ import ScanInvoice from '../components/ScanInvoice.jsx';
 import { buildIsdoc, isdocFilename } from '../integrations/isdoc.js';
 import { exportInvoices, downloadBlob } from '../integrations/bridges.js';
 import { buildReminder } from '../integrations/reminders.js';
+import DocFilter, { applyDocFilter, emptyFilter } from '../components/DocFilter.jsx';
 
 export default function Invoices({ type }) {
   const nav = useNavigate();
@@ -21,6 +22,8 @@ export default function Invoices({ type }) {
   const [company, setCompany] = useState({});
   const [partners, setPartners] = useState([]);
   const [reminder, setReminder] = useState(null);
+  const [docFilter, setDocFilter] = useState({ ...emptyFilter(), period: 'Všetko' });
+  const [showFilter, setShowFilter] = useState(false);
   const isOut = type === 'INO';
   const title = isOut ? 'Zoznam vyšlých faktúr' : 'Zoznam došlých faktúr';
 
@@ -55,9 +58,10 @@ export default function Invoices({ type }) {
     setReminder(buildReminder(sel, { supplier: company, customer: resolveCustomer(sel), today: today() }));
   };
 
-  const filtered = rows.filter(r =>
+  const textFiltered = rows.filter(r =>
     !filter || (r.number + ' ' + (r.partnerName || '') + ' ' + (r.vs || '')).toLowerCase().includes(filter.toLowerCase())
   );
+  const filtered = applyDocFilter(textFiltered, docFilter);
   const [shown, sort, onSort] = useSort(filtered);
 
   const doPay = async (e) => {
@@ -102,7 +106,15 @@ export default function Invoices({ type }) {
         </select>
         <label>Hľadať</label>
         <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="číslo, partner, VS…" />
+        <button className="btn" onClick={() => setShowFilter(s => !s)}>▽ Filter</button>
       </div>
+      {showFilter && (
+        <div style={{ margin: '8px 0' }}>
+          <DocFilter value={docFilter} typeLabels={{ out: 'Vyšlé', in: 'Došlé' }}
+            seriesOptions={[...new Set(rows.map(r => (String(r.number || '').match(/^[A-Za-z]+/) || [])[0]).filter(Boolean))].sort()}
+            onApply={setDocFilter} onClose={() => setShowFilter(false)} />
+        </div>
+      )}
       <div className="grid-wrap">
         <table className="grid">
           <thead>

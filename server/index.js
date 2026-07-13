@@ -23,6 +23,8 @@ const DEFAULT_FIRM = {
   products: [],
   stockmoves: [],
   orders: [],
+  quotes: [],
+  deliverynotes: [],
   recurring: [],
   seq: {}
 };
@@ -308,7 +310,9 @@ app.put('/api/auth/me', async (req, res) => {
   res.json({ user: publicUser(user) });
 });
 
-const COLLECTIONS =['partners', 'invoices', 'cashboxes', 'cashdocs', 'bankaccounts', 'bankmoves', 'products', 'stockmoves', 'orders', 'recurring'];
+const COLLECTIONS =['partners', 'invoices', 'cashboxes', 'cashdocs', 'bankaccounts', 'bankmoves', 'products', 'stockmoves', 'orders', 'quotes', 'deliverynotes', 'recurring'];
+/* položkové doklady (majú items a total ako faktúra) */
+const ITEM_DOCS = ['invoices', 'quotes', 'deliverynotes'];
 
 /* číselníky */
 app.get('/api/categories', (req, res) => res.json(CATEGORIES));
@@ -653,12 +657,48 @@ app.post('/api/bankmoves/import', async (req, res) => {
   res.json({ ok: true, created, paired });
 });
 
+/* konverzia cenovej ponuky / dodacieho listu na faktúru (1 klikom) */
+app.post('/api/:coll/:id/to-invoice', async (req, res, next) => {
+  const { coll } = req.params;
+  if (coll !== 'quotes' && coll !== 'deliverynotes') return next();
+  const src = db[coll].find(r => r.id === Number(req.params.id));
+  if (!src) return res.status(404).json({ error: 'Doklad neexistuje' });
+  if (src.invoiceId && db.invoices.some(i => i.id === src.invoiceId)) {
+    return res.status(409).json({ error: 'Doklad už má vytvorenú faktúru č. ' + (src.invoiceNumber || src.invoiceId), invoiceId: src.invoiceId });
+  }
+  const isOut = src.type !== 'I';
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const inv = {
+    id: nextId('invoices'),
+    type: isOut ? 'INO' : 'INI',
+    number: nextNumber(isOut ? 'VF' : 'DF', todayStr),
+    partnerId: src.partnerId || null,
+    partnerName: src.partnerName || '',
+    currency: src.currency || 'EUR',
+    issueDate: todayStr,
+    deliveryDate: src.deliveryDate || src.issueDate || todayStr,
+    dueDate: new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10),
+    ks: src.ks || '0308',
+    paymentMethod: src.paymentMethod || 'Prevodný príkaz',
+    items: (src.items || []).map(it => ({ ...it })),
+    note: (src.note ? src.note + ' · ' : '') + 'Podľa ' + (coll === 'quotes' ? 'cenovej ponuky' : 'dodacieho listu') + ' ' + (src.number || ''),
+    paid: 0,
+    sourceColl: coll, sourceId: src.id, sourceNumber: src.number,
+  };
+  inv.vs = String(inv.number || '').replace(/\D/g, '');
+  inv.total = round2(invoiceTotal(inv));
+  db.invoices.push(inv);
+  src.invoiceId = inv.id; src.invoiceNumber = inv.number;
+  await saveDb();
+  res.json(inv);
+});
+
 /* generické CRUD */
 app.get('/api/:coll', (req, res, next) => {
   const { coll } = req.params;
   if (!COLLECTIONS.includes(coll)) return next();
   let rows = db[coll];
-  if (coll === 'invoices' && req.query.type) rows = rows.filter(r => r.type === req.query.type);
+  if (req.query.type && ITEM_DOCS.includes(coll)) rows = rows.filter(r => r.type === req.query.type);
   if (req.query.year) rows = rows.filter(r => ((r.issueDate || r.date || '')).startsWith(String(req.query.year)));
   /* doplň mená partnerov */
   rows = rows.map(r => ({ ...r, partnerName: r.partnerId ? ((db.partners.find(p => p.id === r.partnerId) || {}).name || '') : r.partnerName }));
@@ -676,12 +716,15 @@ app.post('/api/:coll', async (req, res, next) => {
     if (coll === 'bankmoves') row.number = nextNumber('BV', row.date);
     if (coll === 'stockmoves') row.number = nextNumber(row.type === 'P' ? 'PRI' : 'VYD', row.date);
     if (coll === 'orders') row.number = nextNumber('OBJ', row.date);
+    if (coll === 'quotes') row.number = nextNumber(row.type === 'I' ? 'CPP' : 'CP', row.issueDate || row.date);
+    if (coll === 'deliverynotes') row.number = nextNumber(row.type === 'I' ? 'DLP' : 'DL', row.issueDate || row.date);
   }
   if (coll === 'invoices') {
     if (!row.vs) row.vs = String(row.number || '').replace(/\D/g, '');
     row.total = round2(invoiceTotal(row));
     row.paid = row.paid || 0;
   }
+  if (coll === 'quotes' || coll === 'deliverynotes') row.total = round2(invoiceTotal(row));
   db[coll].push(row);
   await saveDb();
   res.json(row);
@@ -693,7 +736,7 @@ app.put('/api/:coll/:id', async (req, res, next) => {
   const idx = db[coll].findIndex(r => r.id === Number(req.params.id));
   if (idx < 0) return res.status(404).json({ error: 'Záznam neexistuje' });
   const row = { ...db[coll][idx], ...req.body, id: db[coll][idx].id };
-  if (coll === 'invoices') row.total = round2(invoiceTotal(row));
+  if (ITEM_DOCS.includes(coll)) row.total = round2(invoiceTotal(row));
   db[coll][idx] = row;
   await saveDb();
   res.json(row);
