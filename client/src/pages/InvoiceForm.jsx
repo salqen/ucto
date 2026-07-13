@@ -3,6 +3,8 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, eur, dt, today } from '../api.js';
 import { Section, Frow, PageHead } from '../components/ui.jsx';
 import { qrDataUrl } from '../integrations/paybysquare.js';
+import KsCombo from '../components/KsCombo.jsx';
+import QuickPartner from '../components/QuickPartner.jsx';
 
 const emptyItem = () => ({ code: '', name: '', qty: 1, unit: 'ks', price: 0, vat: 23 });
 /* formát čísel v tlačovej podobe (ako keepi): množstvo a JC na 5 des. miest */
@@ -22,11 +24,12 @@ export default function InvoiceForm() {
     number: '', vs: '', partnerId: '', currency: 'EUR',
     issueDate: today(), deliveryDate: today(),
     dueDate: new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10),
-    ks: '308', paymentMethod: 'Prevodný príkaz', deliveryMethod: 'Osobne',
+    ks: '0308', paymentMethod: 'Prevodný príkaz', deliveryMethod: 'Osobne',
     orderNo: '', deliveryAddress: '', bankAccountId: '',
     items: [emptyItem()], note: '', paid: 0
   });
   const [showPrint, setShowPrint] = useState(false);
+  const [addPartner, setAddPartner] = useState(false);
   const isOut = inv.type === 'INO';
 
   /* predvyplnenie z naskenovaného QR (PAY by square) / EAN kódu */
@@ -305,18 +308,28 @@ export default function InvoiceForm() {
           </div>
           <div>
             <Frow label="Partner" req>
-              <select value={inv.partnerId} onChange={e => set('partnerId', e.target.value)}>
-                <option value="">Vyberte z možností</option>
-                {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <select value={inv.partnerId} onChange={e => set('partnerId', e.target.value)} style={{ flex: 1 }}>
+                  <option value="">Vyberte z možností</option>
+                  {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <button type="button" className="btn" style={{ whiteSpace: 'nowrap' }} onClick={() => setAddPartner(true)} title="Založiť nového partnera">＋ Nový</button>
+              </div>
             </Frow>
+            {addPartner && (
+              <QuickPartner
+                partners={partners}
+                onCreated={pnew => { setPartners(ps => ps.some(x => x.id === pnew.id) ? ps : [...ps, pnew]); set('partnerId', String(pnew.id)); setAddPartner(false); }}
+                onClose={() => setAddPartner(false)}
+              />
+            )}
             {partner && (
               <div style={{ padding: '8px 0', color: '#666', fontSize: 12 }}>
                 {partner.street}, {partner.zip} {partner.city}<br />
                 IČO: {partner.ico} • DIČ: {partner.dic} {partner.icdph && <>• IČ DPH: {partner.icdph}</>}
               </div>
             )}
-            <Frow label="Konštantný symbol"><input value={inv.ks || ''} onChange={e => set('ks', e.target.value)} /></Frow>
+            <Frow label="Konštantný symbol"><KsCombo value={inv.ks} onChange={v => set('ks', v)} /></Frow>
             <Frow label="Forma úhrady">
               <select value={inv.paymentMethod || 'Prevodný príkaz'} onChange={e => set('paymentMethod', e.target.value)}>
                 <option>Prevodný príkaz</option><option>Hotovosť</option><option>Dobierka</option><option>Platobná karta</option><option>Zápočet</option>

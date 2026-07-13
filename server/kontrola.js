@@ -21,6 +21,7 @@ const RPVS_ENTITY = process.env.RPVS_ODATA_ENTITY || 'Partneri';
 const RPVS_WEB = 'https://rpvs.gov.sk/rpvs/Partner/Partner/VyhladavaniePartnera';
 const OV_WEB = 'https://obchodnyvestnik.justice.gov.sk/ObchodnyVestnik/Formular/FormulareZverejnene.aspx';
 const CRE_WEB = 'https://www.cre.sk';
+const RPVE_WEB = 'https://obcan.justice.sk/poverenia/rozsirene-vyhladavanie';
 
 /* ---------- pomocné ---------- */
 
@@ -151,11 +152,13 @@ function insolvencyCheck(ico) {
 /* ---------- Exekúcie (Centrálny register exekúcií — platený) ---------- */
 
 async function executionsCheck(ico) {
+  // bezplatný manuálny odkaz na RPVE (Register poverení na vykonanie exekúcie) — vždy k dispozícii
+  const rpve = { url: RPVE_WEB, note: 'Zadarmo overiť v RPVE (obcan.justice.sk) — zadajte IČO. Pozn.: len exekúcie po 1.4.2017, bez Sociálnej poisťovne.' };
   const base = process.env.CRE_API_URL, key = process.env.CRE_API_KEY;
   if (!base || !key) {
     return {
-      ok: true, status: 'requires_key', url: CRE_WEB,
-      note: 'Centrálny register exekúcií je platený. Automatické overenie sa zapne po nastavení CRE_API_URL a CRE_API_KEY.',
+      ok: true, status: 'manual', url: CRE_WEB, rpve,
+      note: 'Automatické overenie exekúcií nie je zapnuté. Zadarmo použite RPVE odkaz nižšie; platený CRE (cre.sk) sa zapne po nastavení CRE_API_URL a CRE_API_KEY.',
     };
   }
   try {
@@ -163,9 +166,9 @@ async function executionsCheck(ico) {
     const data = await jget(`${base}${sep}ico=${ico}`, { timeout: 10000 });
     // očakávaný tvar prispôsobte poskytovateľovi; tolerantné čítanie:
     const count = Number(data.count ?? (Array.isArray(data.items) ? data.items.length : (Array.isArray(data) ? data.length : 0))) || 0;
-    return { ok: true, status: count > 0 ? 'found' : 'clear', count, url: CRE_WEB };
+    return { ok: true, status: count > 0 ? 'found' : 'clear', count, url: CRE_WEB, rpve };
   } catch (e) {
-    return { ok: false, status: 'error', url: CRE_WEB, error: e.message };
+    return { ok: false, status: 'error', url: CRE_WEB, rpve, error: e.message };
   }
 }
 
@@ -180,8 +183,8 @@ function scoreRisk(sources) {
 
   if (sources.executions && sources.executions.status === 'found') {
     push('critical', `Exekúcie: nájdených ${sources.executions.count} záznamov.`);
-  } else if (sources.executions && sources.executions.status === 'requires_key') {
-    push('info', 'Exekúcie: vyžaduje platený prístup (neoverené).');
+  } else if (sources.executions && sources.executions.status === 'manual') {
+    push('info', 'Exekúcie: overte zadarmo v RPVE (obcan.justice.sk) — neautomatizované.');
   }
   if (sources.insolvency && sources.insolvency.status === 'manual') {
     push('info', 'Insolvencia: overte manuálne v Obchodnom vestníku.');

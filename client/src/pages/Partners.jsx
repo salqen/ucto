@@ -223,12 +223,13 @@ export default function Partners() {
 
                 {/* Exekúcie */}
                 <div style={{ borderTop: '1px solid #eee', paddingTop: 8, marginTop: 8 }}>
-                  <b>Exekúcie (CRE)</b>{' '}
-                  {s.executions && s.executions.url && <Ext href={s.executions.url}>cre.sk</Ext>}
+                  <b>Exekúcie</b>{' '}
+                  {s.executions && s.executions.rpve && s.executions.rpve.url && <Ext href={s.executions.rpve.url}>RPVE — obcan.justice.sk (zadarmo)</Ext>}
+                  {s.executions && s.executions.url && s.executions.status !== 'manual' && <> · <Ext href={s.executions.url}>cre.sk</Ext></>}
                   <div className="hint" style={{ margin: '2px 0 0' }}>
-                    {s.executions && s.executions.status === 'found' && <span style={{ color: '#c0392b' }}>Nájdených {s.executions.count} exekúcií.</span>}
-                    {s.executions && s.executions.status === 'clear' && <span style={{ color: '#5f9622' }}>Bez záznamu o exekúcii.</span>}
-                    {s.executions && s.executions.status !== 'found' && s.executions.status !== 'clear' && (s.executions.note || '—')}
+                    {s.executions && s.executions.status === 'found' && <span style={{ color: '#c0392b' }}>CRE: nájdených {s.executions.count} exekúcií.</span>}
+                    {s.executions && s.executions.status === 'clear' && <span style={{ color: '#5f9622' }}>CRE: bez záznamu o exekúcii.</span>}
+                    {s.executions && s.executions.status !== 'found' && s.executions.status !== 'clear' && (s.executions.rpve ? s.executions.rpve.note : (s.executions.note || '—'))}
                   </div>
                 </div>
 
