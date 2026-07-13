@@ -39,13 +39,18 @@ export default function KsCombo({ value, onChange, presets = KS_PRESETS, placeho
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <input
-        value={value || ''}
-        placeholder={placeholder}
-        onChange={e => { onChange(e.target.value); setOpen(true); }}
-        onFocus={() => setOpen(true)}
-        autoComplete="off"
-      />
+      <div style={{ display: 'flex' }}>
+        <input
+          style={{ flex: 1 }}
+          value={value || ''}
+          placeholder={placeholder}
+          onChange={e => { onChange(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          autoComplete="off"
+        />
+        <button type="button" className="btn" style={{ padding: '0 8px', whiteSpace: 'nowrap' }} tabIndex={-1}
+          onClick={() => setOpen(o => !o)} title="Zobraziť konštantné symboly">▾</button>
+      </div>
       {open && (
         <div style={{
           position: 'absolute', zIndex: 50, top: '100%', left: 0, right: 0,

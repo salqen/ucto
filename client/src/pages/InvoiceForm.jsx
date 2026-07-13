@@ -5,6 +5,7 @@ import { Section, Frow, PageHead } from '../components/ui.jsx';
 import { qrDataUrl } from '../integrations/paybysquare.js';
 import KsCombo from '../components/KsCombo.jsx';
 import QuickPartner from '../components/QuickPartner.jsx';
+import PartnerCombo from '../components/PartnerCombo.jsx';
 
 const emptyItem = () => ({ code: '', name: '', qty: 1, unit: 'ks', price: 0, vat: 23 });
 /* formát čísel v tlačovej podobe (ako keepi): množstvo a JC na 5 des. miest */
@@ -309,10 +310,7 @@ export default function InvoiceForm() {
           <div>
             <Frow label="Partner" req>
               <div style={{ display: 'flex', gap: 6 }}>
-                <select value={inv.partnerId} onChange={e => set('partnerId', e.target.value)} style={{ flex: 1 }}>
-                  <option value="">Vyberte z možností</option>
-                  {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
+                <PartnerCombo partners={partners} value={inv.partnerId} onChange={id => set('partnerId', id)} />
                 <button type="button" className="btn" style={{ whiteSpace: 'nowrap' }} onClick={() => setAddPartner(true)} title="Založiť nového partnera">＋ Nový</button>
               </div>
             </Frow>
