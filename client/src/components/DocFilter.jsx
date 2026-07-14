@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import DateRangeCalendar from './DateRangeCalendar.jsx';
 
 /*
  * DocFilter — filtračný panel pre zoznamy dokladov (faktúry, ponuky, dodacie listy).
@@ -59,7 +60,7 @@ export function applyDocFilter(rows, f) {
   });
 }
 
-const PERIODS = ['Aktuálny rok', 'Minulý rok', 'Aktuálny štvrťrok', 'Minulý štvrťrok', 'Q1', 'Q2', 'Q3', 'Q4', 'Aktuálny mesiac', 'Minulý mesiac', 'Všetko', 'Vlastné'];
+export const PERIODS = ['Aktuálny rok', 'Minulý rok', 'Aktuálny štvrťrok', 'Minulý štvrťrok', 'Q1', 'Q2', 'Q3', 'Q4', 'Aktuálny mesiac', 'Minulý mesiac', 'Všetko', 'Vlastné'];
 
 const inp = {
   width: '100%', padding: '8px 10px', border: '1px solid var(--input-border)', borderRadius: 8,
@@ -98,6 +99,11 @@ export default function DocFilter({ value, onApply, onClose, seriesOptions = [],
         <Field label="Vystavené do">
           <input type="date" style={inp} value={rng.to || ''} onChange={e => editDate('to', e.target.value)} />
         </Field>
+      </div>
+
+      <div style={{ margin: '2px 0 12px' }}>
+        <DateRangeCalendar from={rng.from} to={rng.to} months={2}
+          onChange={({ from, to }) => setF(o => ({ ...o, period: 'Vlastné', from, to }))} />
       </div>
 
       <Field label="Partner" full>

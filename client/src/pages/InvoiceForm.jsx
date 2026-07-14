@@ -6,8 +6,11 @@ import { qrDataUrl } from '../integrations/paybysquare.js';
 import KsCombo from '../components/KsCombo.jsx';
 import QuickPartner from '../components/QuickPartner.jsx';
 import PartnerCombo from '../components/PartnerCombo.jsx';
+import CatSelect from '../components/CatSelect.jsx';
 
 const emptyItem = () => ({ code: '', name: '', qty: 1, unit: 'ks', price: 0, vat: 23 });
+/* predvolený druh peňažného denníka podľa typu faktúry */
+const defaultCat = t => (t === 'INI' ? 'PR' : 'PS');
 /* formát čísel v tlačovej podobe (ako keepi): množstvo a JC na 5 des. miest */
 const num5 = n => (Number(n) || 0).toLocaleString('sk-SK', { minimumFractionDigits: 5, maximumFractionDigits: 5 });
 const num2 = n => (Number(n) || 0).toLocaleString('sk-SK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -20,6 +23,7 @@ export default function InvoiceForm() {
   const [partners, setPartners] = useState([]);
   const [settings, setSettings] = useState(null);
   const [bankAccounts, setBankAccounts] = useState([]);
+  const [cats, setCats] = useState({ P: [], V: [] });
   const [inv, setInv] = useState({
     type: typeParam === 'INI' ? 'INI' : 'INO',
     number: '', vs: '', partnerId: '', currency: 'EUR',
@@ -27,6 +31,7 @@ export default function InvoiceForm() {
     dueDate: new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10),
     ks: '0308', paymentMethod: 'Prevodný príkaz', deliveryMethod: 'Osobne',
     orderNo: '', deliveryAddress: '', bankAccountId: '',
+    category: defaultCat(typeParam === 'INI' ? 'INI' : 'INO'),
     items: [emptyItem()], note: '', paid: 0
   });
   const [showPrint, setShowPrint] = useState(false);
@@ -71,11 +76,12 @@ export default function InvoiceForm() {
     api.get('/partners').then(setPartners);
     api.get('/settings').then(setSettings);
     api.get('/bankaccounts').then(setBankAccounts).catch(() => {});
+    api.get('/categories').then(setCats).catch(() => {});
     if (!isNew) {
       api.get('/invoices').then(list => {
         const found = list.find(r => r.id === Number(id));
         if (found) {
-          setInv({ ...found, items: found.items?.length ? found.items : [emptyItem()] });
+          setInv({ ...found, category: found.category || defaultCat(found.type), items: found.items?.length ? found.items : [emptyItem()] });
           if (sp.get('print')) setShowPrint(true);
         }
       });
@@ -287,7 +293,8 @@ export default function InvoiceForm() {
         <div className="form-grid">
           <div>
             <Frow label="Typ" req>
-              <select value={inv.type} onChange={e => set('type', e.target.value)} disabled={!isNew}>
+              <select value={inv.type} disabled={!isNew}
+                onChange={e => setInv(p => ({ ...p, type: e.target.value, category: defaultCat(e.target.value) }))}>
                 <option value="INO">Vyšlá faktúra</option>
                 <option value="INI">Došlá faktúra</option>
               </select>
@@ -305,6 +312,10 @@ export default function InvoiceForm() {
               <select value={inv.currency} onChange={e => set('currency', e.target.value)}>
                 <option>EUR</option><option>CZK</option><option>USD</option>
               </select>
+            </Frow>
+            <Frow label={isOut ? 'Druh príjmu (denník)' : 'Druh výdavku (denník)'}>
+              <CatSelect cats={cats} type={isOut ? 'P' : 'V'} value={inv.category}
+                onChange={v => set('category', v)} />
             </Frow>
           </div>
           <div>

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { api, eur, dt, today } from '../api.js';
 import { PageHead, Modal, Frow, useSort, SortTh } from './ui.jsx';
 import ImportStatement from './ImportStatement.jsx';
+import CatSelect, { catName } from './CatSelect.jsx';
+import MoneyFilter, { applyMoneyFilter, emptyMoneyFilter } from './MoneyFilter.jsx';
 
 /*
  Spoločný modul pre Pokladňu a Banku.
@@ -23,6 +25,9 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
   const [accEdit, setAccEdit] = useState(null);
   const [sel, setSel] = useState(null);
   const [imp, setImp] = useState(false);
+  const [q, setQ] = useState('');
+  const [mf, setMf] = useState({ ...emptyMoneyFilter(), period: 'Aktuálny rok' });
+  const [showFilter, setShowFilter] = useState(false);
 
   const load = () => {
     api.get('/' + accColl).then(a => {
@@ -46,12 +51,15 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
       ...d, balance: bal,
       partnerName: (partners.find(p => p.id === d.partnerId) || {}).name || '',
       typeName: d.type === 'P' ? 'Príjem' : 'Výdaj',
-      categoryName: (cats[d.type] || []).find(c => c.code === d.category)?.name || d.category || '',
+      categoryName: catName(cats, d.type, d.category),
       inAmt: d.type === 'P' ? Number(d.amount || 0) : null,
       outAmt: d.type === 'V' ? Number(d.amount || 0) : null
     };
   });
-  const [rows, sort, onSort] = useSort(baseRows);
+  const accBalance = baseRows.length ? baseRows[baseRows.length - 1].balance : Number(acc?.initial || 0);
+  const qFiltered = baseRows.filter(r => !q ||
+    ((r.number || '') + ' ' + (r.partnerName || '') + ' ' + (r.text || '') + ' ' + (r.vs || '')).toLowerCase().includes(q.toLowerCase()));
+  const [rows, sort, onSort] = useSort(applyMoneyFilter(qFiltered, mf));
 
   const saveDoc = async (e) => {
     e.preventDefault();
@@ -95,9 +103,20 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
         <button className="btn danger" disabled={!sel} onClick={delDoc}>Zmazať</button>
         <button className="btn" disabled={!acc} onClick={() => setAccEdit(acc)}>Nastavenie: {acc?.name}</button>
         <span style={{ marginLeft: 'auto', alignSelf: 'center' }}>
-          Zostatok: <b style={{ color: '#5f9622', fontSize: 15 }}>{eur(rows.length ? rows[rows.length - 1].balance : acc?.initial)}</b>
+          Zostatok: <b style={{ color: '#5f9622', fontSize: 15 }}>{eur(accBalance)}</b>
         </span>
       </div>
+
+      <div className="filter-row">
+        <label>Hľadať</label>
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder="doklad, partner, text, VS…" />
+        <button className="btn" onClick={() => setShowFilter(s => !s)}>▽ Filter</button>
+      </div>
+      {showFilter && (
+        <div style={{ margin: '8px 0' }}>
+          <MoneyFilter value={mf} cats={cats} onApply={setMf} onClose={() => setShowFilter(false)} />
+        </div>
+      )}
 
       <div className="grid-wrap">
         <table className="grid">
@@ -162,9 +181,8 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
             </Frow>
             <Frow label="Text" req><input value={edit.text} required onChange={e => setEdit(p => ({ ...p, text: e.target.value }))} /></Frow>
             <Frow label="Druh (stĺpec denníka)" req>
-              <select value={edit.category} onChange={e => setEdit(p => ({ ...p, category: e.target.value }))}>
-                {(cats[edit.type] || []).map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-              </select>
+              <CatSelect cats={cats} type={edit.type} value={edit.category} required
+                onChange={v => setEdit(p => ({ ...p, category: v }))} />
             </Frow>
             {hasIban && <Frow label="VS"><input value={edit.vs || ''} onChange={e => setEdit(p => ({ ...p, vs: e.target.value }))} /></Frow>}
             <Frow label="Suma (€)" req><input type="number" step="0.01" min="0.01" value={edit.amount} required onChange={e => setEdit(p => ({ ...p, amount: e.target.value }))} /></Frow>
