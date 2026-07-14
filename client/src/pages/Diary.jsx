@@ -2,20 +2,38 @@ import React, { useEffect, useState } from 'react';
 import { api, eur, dt, today } from '../api.js';
 import { PageHead, Modal, Frow, useSort, SortTh } from '../components/ui.jsx';
 import CatSelect from '../components/CatSelect.jsx';
+<<<<<<< HEAD
 import MoneyFilter, { applyMoneyFilter, emptyMoneyFilter } from '../components/MoneyFilter.jsx';
+=======
+>>>>>>> 9ef743b633dd0fb293132b9b4d7b21e39e274b36
 
 /* zdroj -> kolekcia a kľúč účtu */
 const collOf = src => (src === 'BAN' ? 'bankmoves' : 'cashdocs');
 
 export default function Diary() {
   const [data, setData] = useState({ rows: [], initial: 0 });
+<<<<<<< HEAD
   const [q, setQ] = useState('');
   const [mf, setMf] = useState({ ...emptyMoneyFilter(), period: 'Aktuálny rok' });
   const [showFilter, setShowFilter] = useState(false);
+=======
+  const [year, setYear] = useState(String(new Date().getFullYear()));
+  const [type, setType] = useState('');
+>>>>>>> 9ef743b633dd0fb293132b9b4d7b21e39e274b36
   const [partners, setPartners] = useState([]);
   const [cats, setCats] = useState({ P: [], V: [] });
   const [sel, setSel] = useState(null);
   const [edit, setEdit] = useState(null);
+<<<<<<< HEAD
+=======
+
+  const load = () => api.get('/diary' + (year ? '?year=' + year : '')).then(d => { setData(d); setSel(null); });
+  useEffect(() => { load(); }, [year]);
+  useEffect(() => {
+    api.get('/partners').then(setPartners).catch(() => {});
+    api.get('/categories').then(setCats).catch(() => {});
+  }, []);
+>>>>>>> 9ef743b633dd0fb293132b9b4d7b21e39e274b36
 
   const load = () => api.get('/diary').then(d => { setData(d); setSel(null); });
   useEffect(() => { load(); }, []);
@@ -34,6 +52,28 @@ export default function Diary() {
   const [rows, sort, onSort] = useSort(filtered);
   const inc = rows.filter(r => r.type === 'P').reduce((s, r) => s + Number(r.amount || 0), 0);
   const exp = rows.filter(r => r.type === 'V').reduce((s, r) => s + Number(r.amount || 0), 0);
+
+  const rowKey = r => r.src + '-' + r.id;
+  const isBank = edit?.src === 'BAN';
+
+  const saveDoc = async (e) => {
+    e.preventDefault();
+    const coll = collOf(edit.src);
+    const body = {
+      type: edit.type, date: edit.date, number: edit.number,
+      text: edit.text, category: edit.category,
+      amount: Number(edit.amount),
+      partnerId: edit.partnerId ? Number(edit.partnerId) : null
+    };
+    if (coll === 'bankmoves') { body.accountId = edit.accountId; body.vs = edit.vs || ''; }
+    else { body.cashboxId = edit.cashboxId; }
+    await api.put(`/${coll}/${edit.id}`, body);
+    setEdit(null); load();
+  };
+  const delDoc = async () => {
+    if (!sel || !confirm(`Zmazať doklad ${sel.number}? Odstráni sa aj z pokladne/banky.`)) return;
+    await api.del(`/${collOf(sel.src)}/${sel.id}`); setSel(null); load();
+  };
 
   const rowKey = r => r.src + '-' + r.id;
   const isBank = edit?.src === 'BAN';

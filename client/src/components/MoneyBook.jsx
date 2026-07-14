@@ -3,7 +3,10 @@ import { api, eur, dt, today } from '../api.js';
 import { PageHead, Modal, Frow, useSort, SortTh } from './ui.jsx';
 import ImportStatement from './ImportStatement.jsx';
 import CatSelect, { catName } from './CatSelect.jsx';
+<<<<<<< HEAD
 import MoneyFilter, { applyMoneyFilter, emptyMoneyFilter } from './MoneyFilter.jsx';
+=======
+>>>>>>> 9ef743b633dd0fb293132b9b4d7b21e39e274b36
 
 /*
  Spoločný modul pre Pokladňu a Banku.
