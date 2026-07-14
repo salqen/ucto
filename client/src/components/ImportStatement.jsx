@@ -43,16 +43,61 @@ const parseDate = s => {
   return '';
 };
 
-/* automatické rozpoznanie stĺpcov podľa hlavičky */
+/* automatické rozpoznanie stĺpcov podľa hlavičky (vrátane FIO „Objem", „Protiúčet") */
 function guessMapping(header) {
   const find = (re) => header.findIndex(h => re.test(String(h)));
+  const findPrio = (res) => { for (const re of res) { const i = find(re); if (i >= 0) return i; } return -1; };
   return {
     date: find(/d[áa]tum|date|valut|za[úu][čc]t/i),
-    amount: find(/suma|amount|[čc]iastka|obrat|value/i),
+    amount: find(/objem|suma|amount|[čc]iastka|obrat|value/i),
     vs: find(/variab|(^|\W)vs(\W|$)|symbol/i),
     iban: find(/iban|proti[úu][čc]et|[úu][čc]et\s*(partnera|protistrany)|counter/i),
-    text: find(/popis|text|spr[áa]va|pozn[áa]m|description|refer|n[áa]zov\s*protistrany/i)
+    text: findPrio([/n[áa]zov proti[úu][čc]tu/i, /spr[áa]va pre pr[íi]jemcu/i, /popis|[úu][čc]el/i, /pozn[áa]m/i, /text|description|refer|spr[áa]va|n[áa]zov\s*protistrany/i]),
   };
+}
+
+/* nájdi riadok hlavičky (preskočí úvodné info riadky výpisu, napr. pri FIO) */
+function findHeaderRow(rows) {
+  const isDate = c => /^(d[áa]tum|date)/i.test(String(c).trim());
+  const isAmt = c => /^(objem|suma|amount|[čc]iastka|obrat|value)/i.test(String(c).trim());
+  for (let i = 0; i < Math.min(rows.length, 40); i++) {
+    if (Array.isArray(rows[i]) && rows[i].some(isDate) && rows[i].some(isAmt)) return i;
+  }
+  return 0;
+}
+
+/* rozpozná FIO CSV hlavičku */
+function isFioHeader(header) {
+  const h = header.map(x => String(x).trim().toLowerCase());
+  return h.includes('objem') && h.some(x => /proti[úu][čc]et/.test(x));
+}
+
+/* priamy parser FIO výpisu (bez ručného priraďovania stĺpcov) */
+function parseFio(rows) {
+  const header = rows[0].map(x => String(x).trim().toLowerCase());
+  const col = (...names) => { for (const n of names) { const i = header.indexOf(n); if (i >= 0) return i; } return -1; };
+  const ci = {
+    date: col('dátum', 'datum'), amount: col('objem'), vs: col('vs'),
+    iban: col('protiúčet', 'protiucet'),
+    name: col('názov protiúčtu', 'nazov protiuctu'),
+    sprava: col('správa pre príjemcu', 'sprava pre prijemcu'),
+    upres: col('upresnenie'),
+    pozn: header.map((h, i) => (h === 'poznámka' || h === 'poznamka') ? i : -1).filter(i => i >= 0),
+  };
+  return rows.slice(1).map(r => {
+    const amount = parseAmount(r[ci.amount]);
+    const parts = [r[ci.name], r[ci.sprava], r[ci.upres], ...ci.pozn.map(i => r[i])]
+      .map(x => String(x || '').trim()).filter(Boolean);
+    const text = [...new Set(parts)].join(' · ').slice(0, 120);
+    return {
+      date: parseDate(r[ci.date]),
+      amount: Math.abs(amount),
+      type: amount < 0 ? 'V' : 'P',
+      vs: ci.vs >= 0 ? String(r[ci.vs] || '').replace(/\D/g, '') : '',
+      iban: ci.iban >= 0 ? String(r[ci.iban] || '').replace(/\s/g, '') : '',
+      text: text || 'Import výpisu',
+    };
+  }).filter(r => r.amount > 0 && r.date);
 }
 
 /* camt.053 / camt.052 XML (SEPA výpis) — parsuje spoločný modul bankmatch (regex, extrahuje aj SS/KS/IBAN) */
@@ -105,8 +150,18 @@ export default function ImportStatement({ accountId, onClose, onDone }) {
         setErr('XML sa nepodarilo spracovať — podporovaný je formát camt.053/052 (SEPA výpis).');
       }
     } else {
-      const c = parseCSV(text);
-      if (c.length < (hasHeader ? 2 : 1)) { setErr('Súbor neobsahuje žiadne riadky s dátami.'); return; }
+      const all = parseCSV(text);
+      /* preskoč úvodné info riadky výpisu (FIO má hlavičku výpisu pred tabuľkou) */
+      const hi = findHeaderRow(all);
+      const c = all.slice(hi);
+      if (c.length < 2) { setErr('Súbor neobsahuje žiadne riadky s dátami.'); return; }
+      /* FIO CSV — rozpoznané automaticky, bez ručného priraďovania */
+      if (isFioHeader(c[0])) {
+        const data = parseFio(c);
+        if (!data.length) { setErr('FIO výpis sa nepodarilo spracovať (žiadne platné pohyby).'); return; }
+        prepare(data);
+        return;
+      }
       setCsv(c);
       setMap(guessMapping(c[0]));
       setStep('map');
