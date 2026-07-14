@@ -7,6 +7,7 @@ import { buildIsdoc, isdocFilename } from '../integrations/isdoc.js';
 import { exportInvoices, downloadBlob } from '../integrations/bridges.js';
 import { buildReminder } from '../integrations/reminders.js';
 import DocFilter, { applyDocFilter, emptyFilter } from '../components/DocFilter.jsx';
+import CatSelect, { catName } from '../components/CatSelect.jsx';
 
 export default function Invoices({ type }) {
   const nav = useNavigate();
@@ -24,7 +25,10 @@ export default function Invoices({ type }) {
   const [reminder, setReminder] = useState(null);
   const [docFilter, setDocFilter] = useState({ ...emptyFilter(), period: 'Všetko' });
   const [showFilter, setShowFilter] = useState(false);
+  const [cats, setCats] = useState({ P: [], V: [] });
+  const [catFilter, setCatFilter] = useState('');
   const isOut = type === 'INO';
+  const catType = isOut ? 'P' : 'V';
   const title = isOut ? 'Zoznam vyšlých faktúr' : 'Zoznam došlých faktúr';
 
   const loadYears = () => api.get('/invoices?type=' + type).then(all =>
@@ -37,6 +41,7 @@ export default function Invoices({ type }) {
     api.get('/bankaccounts').then(setAccounts);
     api.get('/settings').then(s => setCompany(s.company || {})).catch(() => {});
     api.get('/partners').then(setPartners).catch(() => {});
+    api.get('/categories').then(setCats).catch(() => {});
   }, []);
 
   const resolveCustomer = (inv) => partners.find(p => p.id === inv.partnerId) || { name: inv.partnerName };
@@ -58,10 +63,12 @@ export default function Invoices({ type }) {
     setReminder(buildReminder(sel, { supplier: company, customer: resolveCustomer(sel), today: today() }));
   };
 
-  const textFiltered = rows.filter(r =>
+  const withCat = rows.map(r => ({ ...r, categoryName: catName(cats, catType, r.category) }));
+  const textFiltered = withCat.filter(r =>
     !filter || (r.number + ' ' + (r.partnerName || '') + ' ' + (r.vs || '')).toLowerCase().includes(filter.toLowerCase())
   );
-  const filtered = applyDocFilter(textFiltered, docFilter);
+  const catFiltered = textFiltered.filter(r => !catFilter || r.category === catFilter);
+  const filtered = applyDocFilter(catFiltered, docFilter);
   const [shown, sort, onSort] = useSort(filtered);
 
   const doPay = async (e) => {
@@ -106,6 +113,9 @@ export default function Invoices({ type }) {
         </select>
         <label>Hľadať</label>
         <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="číslo, partner, VS…" />
+        <label>{isOut ? 'Druh príjmu' : 'Druh výdavku'}</label>
+        <CatSelect cats={cats} type={catType} value={catFilter} includeAll allLabel="Všetky druhy"
+          onChange={setCatFilter} />
         <button className="btn" onClick={() => setShowFilter(s => !s)}>▽ Filter</button>
       </div>
       {showFilter && (
@@ -123,6 +133,7 @@ export default function Invoices({ type }) {
               <SortTh label="Doklad č." k="number" sort={sort} onSort={onSort} />
               <SortTh label="VS" k="vs" sort={sort} onSort={onSort} />
               <SortTh label="Partner" k="partnerName" sort={sort} onSort={onSort} />
+              <SortTh label="Druh" k="categoryName" sort={sort} onSort={onSort} />
               <SortTh label="Vystavená" k="issueDate" type="date" sort={sort} onSort={onSort} />
               <SortTh label="Splatná" k="dueDate" type="date" sort={sort} onSort={onSort} />
               <SortTh label="Mena" k="currency" sort={sort} onSort={onSort} />
@@ -144,6 +155,7 @@ export default function Invoices({ type }) {
                   <td>{r.number}</td>
                   <td>{r.vs}</td>
                   <td>{r.partnerName}</td>
+                  <td>{r.categoryName}</td>
                   <td>{dt(r.issueDate)}</td>
                   <td>{dt(r.dueDate)}</td>
                   <td>{r.currency || 'EUR'}</td>
@@ -153,11 +165,11 @@ export default function Invoices({ type }) {
                 </tr>
               );
             })}
-            {!shown.length && <tr><td colSpan={10} style={{ textAlign: 'center', color: '#999' }}>Žiadne faktúry</td></tr>}
+            {!shown.length && <tr><td colSpan={11} style={{ textAlign: 'center', color: '#999' }}>Žiadne faktúry</td></tr>}
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={7}>Spolu</td>
+              <td colSpan={8}>Spolu</td>
               <td className="num">{eur(shown.reduce((s, r) => s + r.total, 0))}</td>
               <td className="num">{eur(shown.reduce((s, r) => s + (r.paid || 0), 0))}</td>
               <td></td>
