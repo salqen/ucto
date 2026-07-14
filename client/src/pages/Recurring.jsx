@@ -5,21 +5,24 @@ import { generateDue, dueIssueDates, upcoming, itemsTotal, PERIODICITY_LABELS } 
 
 const emptyItem = () => ({ name: '', qty: 1, unit: 'ks', price: 0, vat: 23 });
 const emptyTmpl = () => ({
-  partnerId: '', currency: 'EUR', periodicity: 'monthly',
+  type: 'INO', partnerId: '', currency: 'EUR', periodicity: 'monthly',
   startDate: today(), dueDays: 14, active: true, note: '', items: [emptyItem()],
 });
+const typeName = t => (t === 'INI' ? 'Došlá' : 'Vyšlá');
 
 export default function Recurring() {
   const [rows, setRows] = useState([]);
   const [partners, setPartners] = useState([]);
   const [edit, setEdit] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [ftype, setFtype] = useState('all');
   const t0 = today();
 
   const load = () => api.get('/recurring').then(setRows).catch(() => setRows([]));
   useEffect(() => { load(); api.get('/partners').then(setPartners).catch(() => {}); }, []);
 
   const nameOf = (id) => (partners.find(p => p.id === Number(id)) || {}).name || '—';
+  const shown = rows.filter(t => ftype === 'all' || (t.type === 'INI' ? 'INI' : 'INO') === ftype);
   const totalDue = useMemo(() => rows.reduce((s, t) => s + dueIssueDates(t, t0).length, 0), [rows, t0]);
 
   const save = async (e) => {
@@ -53,18 +56,29 @@ export default function Recurring() {
   return (
     <>
       <PageHead title="Pravidelné faktúry">
-        <button className="btn primary" onClick={() => setEdit(emptyTmpl())}>➕ Nová šablóna</button>
+        <button className="btn primary" onClick={() => setEdit({ ...emptyTmpl(), type: 'INO' })}>➕ Nová vyšlá šablóna</button>
+        <button className="btn primary" onClick={() => setEdit({ ...emptyTmpl(), type: 'INI' })}>➕ Nová prijatá šablóna</button>
         {totalDue > 0 && <button className="btn primary" disabled={busy} onClick={generate}>⚡ Vygenerovať {totalDue} faktúr</button>}
       </PageHead>
+
+      <div className="filter-row">
+        <label>Typ</label>
+        <select value={ftype} onChange={e => setFtype(e.target.value)}>
+          <option value="all">Všetky</option>
+          <option value="INO">Vyšlé (vystavené)</option>
+          <option value="INI">Došlé (prijaté)</option>
+        </select>
+      </div>
 
       <div className="grid-wrap">
         <table className="grid">
           <thead><tr>
-            <th>Partner</th><th>Perióda</th><th className="num">Suma</th><th>Ďalšia</th><th>Po termíne</th><th>Stav</th><th></th>
+            <th>Typ</th><th>Partner</th><th>Perióda</th><th className="num">Suma</th><th>Ďalšia</th><th>Po termíne</th><th>Stav</th><th></th>
           </tr></thead>
           <tbody>
-            {rows.map(t => (
+            {shown.map(t => (
               <tr key={t.id} onDoubleClick={() => setEdit({ ...t, items: t.items?.length ? t.items : [emptyItem()] })} style={{ cursor: 'pointer' }}>
+                <td>{typeName(t.type)}</td>
                 <td><b>{nameOf(t.partnerId)}</b></td>
                 <td>{PERIODICITY_LABELS[t.periodicity] || t.periodicity}</td>
                 <td className="num">{eur(itemsTotal(t.items))}</td>
@@ -74,17 +88,23 @@ export default function Recurring() {
                 <td className="no-print"><button className="btn danger" style={{ padding: '3px 8px' }} onClick={() => del(t)}>✕</button></td>
               </tr>
             ))}
-            {!rows.length && <tr><td colSpan={7} style={{ textAlign: 'center', color: '#999' }}>Žiadne šablóny — pridajte prvú</td></tr>}
+            {!shown.length && <tr><td colSpan={8} style={{ textAlign: 'center', color: '#999' }}>Žiadne šablóny — pridajte prvú</td></tr>}
           </tbody>
         </table>
       </div>
-      <div className="grid-foot">{rows.length} šablón • {totalDue} faktúr čaká na vystavenie • dvojklik = úprava</div>
+      <div className="grid-foot">{shown.length} šablón • {totalDue} faktúr čaká na vystavenie • dvojklik = úprava</div>
 
       {edit && (
-        <Modal title={edit.id ? 'Šablóna pravidelnej faktúry' : 'Nová pravidelná faktúra'} onClose={() => setEdit(null)} wide>
+        <Modal title={(edit.id ? 'Šablóna pravidelnej faktúry' : 'Nová pravidelná faktúra') + ' — ' + typeName(edit.type)} onClose={() => setEdit(null)} wide>
           <form onSubmit={save}>
             <div className="form-grid">
               <div>
+                <Frow label="Typ" req>
+                  <select value={edit.type || 'INO'} onChange={e => setEdit(p => ({ ...p, type: e.target.value }))}>
+                    <option value="INO">Vyšlá (vystavená) faktúra</option>
+                    <option value="INI">Došlá (prijatá) faktúra</option>
+                  </select>
+                </Frow>
                 <Frow label="Partner" req>
                   <select value={edit.partnerId} required onChange={e => setEdit(p => ({ ...p, partnerId: e.target.value }))}>
                     <option value="">Vyberte…</option>
