@@ -34,6 +34,8 @@ export default function Dashboard() {
         <Tile color="t-purple" title="Vyšlé faktúry" icon="🗎" menu={[
           { label: 'Nová faktúra', to: '/faktury/INO/nova' },
           { label: 'Zoznam', to: '/faktury/vysle' },
+          { label: 'Pripomienky', to: '/pripomienky' },
+          { label: 'Pravidelné faktúry', to: '/pravidelne' },
           { label: 'Objednávky', to: '/objednavky' }
         ]}>
           <div className="kv">Počet neuhradených faktúr po splatnosti</div>
@@ -53,6 +55,20 @@ export default function Dashboard() {
             <div><div className="kv">Počet</div><div className="val">{d.incomingCount ?? 0}</div></div>
             <div><div className="kv">Neuhradená suma</div><div className="val">{eur(d.incomingSum)}</div></div>
           </div>
+        </Tile>
+        <Tile color="t-gold" title="Cenové ponuky" icon="📄" menu={[
+          { label: 'Nová cenová ponuka (vyšlá)', to: '/ponuky/vysle/nova' },
+          { label: 'Vyšlé cenové ponuky', to: '/ponuky/vysle' },
+          { label: 'Došlé cenové ponuky', to: '/ponuky/dosle' }
+        ]}>
+          <div className="kv">Vyšlé a došlé cenové ponuky</div>
+        </Tile>
+        <Tile color="t-plum" title="Dodacie listy" icon="📦" menu={[
+          { label: 'Nový dodací list (vyšlý)', to: '/dodacie-listy/vysle/nova' },
+          { label: 'Vyšlé dodacie listy', to: '/dodacie-listy/vysle' },
+          { label: 'Došlé dodacie listy', to: '/dodacie-listy/dosle' }
+        ]}>
+          <div className="kv">Vyšlé a došlé dodacie listy</div>
         </Tile>
         <Tile color="t-teal" title="Partner" icon="👤" to="/partneri">
           <div className="kv">Dlhujem</div><div className="val">{eur(d.iOwe)}</div>
