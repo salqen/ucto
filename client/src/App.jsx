@@ -58,8 +58,9 @@ export default function App() {
     return () => window.removeEventListener('auth-required', onAuthRequired);
   }, []);
 
-  /* úvodné login menu: do systému sa vstupuje vždy cez prihlásenie / registráciu */
-  const authed = !!auth.user;
+  /* úvodné login menu: do systému sa vstupuje vždy cez prihlásenie / registráciu
+     (dočasne vypnuté – keď server nevyžaduje prihlásenie, appka sa zobrazí priamo) */
+  const authed = !!auth.user || !auth.required;
   useEffect(() => { if (authed) api.get('/settings').then(setSettings).catch(() => {}); }, [loc.pathname, authed]);
 
   const [docs, setDocs] = useState([]);

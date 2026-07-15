@@ -110,25 +110,36 @@ function nextNumber(prefix, date) {
   return `${prefix}${ym}${String(db.seq[key]).padStart(4, '0')}`;
 }
 
-/* ---------- kategórie peňažného denníka (JÚ) ---------- */
+/* ---------- kategórie peňažného denníka (JÚ) ----------
+   group: 'B' = ovplyvňujúce základ dane, 'N' = neovplyvňujúce základ dane */
+const CAT_GROUPS = { B: 'Ovplyvňujúce základ dane', N: 'Neovplyvňujúce základ dane' };
 const CATEGORIES = {
   P: [
-    { code: 'PT', name: 'Predaj tovaru', tax: true },
-    { code: 'PS', name: 'Predaj výrobkov a služieb', tax: true },
-    { code: 'OP', name: 'Ostatné príjmy', tax: true },
-    { code: 'DPHP', name: 'DPH prijatá', tax: false },
-    { code: 'VP', name: 'Vklad podnikateľa', tax: false },
-    { code: 'UP', name: 'Úhrada pohľadávky', tax: true }
+    /* ovplyvňujúce základ dane */
+    { code: 'PT', name: 'Predaj tovaru', tax: true, group: 'B' },
+    { code: 'PS', name: 'Predaj výrobkov a služieb', tax: true, group: 'B' },
+    { code: 'OP', name: 'Ostatné príjmy (úroky, kurzové zisky, dotácie)', tax: true, group: 'B' },
+    { code: 'UP', name: 'Úhrada pohľadávky', tax: true, group: 'B' },
+    /* neovplyvňujúce základ dane */
+    { code: 'VP', name: 'Vklad podnikateľa (vložené prostriedky)', tax: false, group: 'N' },
+    { code: 'UV', name: 'Prijaté úvery a pôžičky', tax: false, group: 'N' },
+    { code: 'DPHP', name: 'DPH prijatá / vrátené preplatky', tax: false, group: 'N' }
   ],
   V: [
-    { code: 'NM', name: 'Nákup materiálu', tax: true },
-    { code: 'NT', name: 'Nákup tovaru', tax: true },
-    { code: 'MZ', name: 'Mzdy', tax: true },
-    { code: 'PO', name: 'Poistné a odvody', tax: true },
-    { code: 'PR', name: 'Prevádzková réžia', tax: true },
-    { code: 'OV', name: 'Ostatné výdavky', tax: true },
-    { code: 'DPHZ', name: 'DPH zaplatená', tax: false },
-    { code: 'OS', name: 'Osobná spotreba', tax: false }
+    /* ovplyvňujúce základ dane (daňové výdavky) */
+    { code: 'NM', name: 'Nákup materiálu a zásob', tax: true, group: 'B' },
+    { code: 'NT', name: 'Nákup tovaru', tax: true, group: 'B' },
+    { code: 'PR', name: 'Prevádzková réžia (služby, energie, nájom, reklama)', tax: true, group: 'B' },
+    { code: 'MZ', name: 'Mzdy', tax: true, group: 'B' },
+    { code: 'PO', name: 'Poistné a odvody', tax: true, group: 'B' },
+    { code: 'SF', name: 'Tvorba sociálneho fondu', tax: true, group: 'B' },
+    { code: 'OV', name: 'Ostatné výdavky (cestovné, daň z MV, odpisy)', tax: true, group: 'B' },
+    /* neovplyvňujúce základ dane (nedaňové výdavky) */
+    { code: 'OS', name: 'Osobná spotreba', tax: false, group: 'N' },
+    { code: 'SU', name: 'Splátky istiny úverov a pôžičiek', tax: false, group: 'N' },
+    { code: 'DM', name: 'Nákup dlhodobého majetku', tax: false, group: 'N' },
+    { code: 'DP', name: 'Platba dane z príjmov', tax: false, group: 'N' },
+    { code: 'DPHZ', name: 'DPH zaplatená', tax: false, group: 'N' }
   ]
 };
 function catName(type, code) {
@@ -190,8 +201,12 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+/* DOČASNE: vypnutie prihlasovania (na záver znovu zapneme -> nastav na false) */
+const AUTH_DISABLED = true;
+
 /* ochrana API: ak existujú používatelia, vyžaduje sa prihlásenie */
 app.use('/api', (req, res, next) => {
+  if (AUTH_DISABLED) return next(); /* dočasne bez prihlásenia */
   if (req.path.startsWith('/auth')) return next();
   if (!(db.users || []).length) return next(); /* prvé spustenie bez účtov */
   const user = sessionUser(req);
@@ -207,6 +222,7 @@ app.use('/api', (req, res, next) => {
 
 /* vynucovanie rolí pre dátové operácie aktívnej firmy */
 app.use('/api', (req, res, next) => {
+  if (AUTH_DISABLED) return next();                  /* dočasne bez prihlásenia */
   if (!req.user) return next();                      /* bez účtov = voľný prístup */
   if (req.method === 'GET') return next();           /* čítanie môže každý člen */
   if (req.path.startsWith('/auth') || req.path.startsWith('/firms')) return next(); /* vlastné kontroly */
@@ -221,7 +237,7 @@ app.use('/api', (req, res, next) => {
 
 /* ---------- autentifikácia ---------- */
 app.get('/api/auth/me', (req, res) => {
-  res.json({ user: publicUser(sessionUser(req)), required: (db.users || []).length > 0 });
+  res.json({ user: publicUser(sessionUser(req)), required: !AUTH_DISABLED && (db.users || []).length > 0 });
 });
 
 app.post('/api/auth/register', async (req, res) => {
@@ -317,7 +333,7 @@ const COLLECTIONS =['partners', 'invoices', 'cashboxes', 'cashdocs', 'bankaccoun
 const ITEM_DOCS = ['invoices', 'quotes', 'deliverynotes'];
 
 /* číselníky */
-app.get('/api/categories', (req, res) => res.json(CATEGORIES));
+app.get('/api/categories', (req, res) => res.json({ ...CATEGORIES, groups: CAT_GROUPS }));
 
 /* ---------- register firiem (RPO – Štatistický úrad SR) podľa IČO ---------- */
 function rpoPickCurrent(items) {
@@ -626,7 +642,7 @@ app.post('/api/invoices/:id/pay', async (req, res) => {
   const amt = round2(Number(amount) || (inv.total - (inv.paid || 0)));
   const isOut = inv.type === 'INO'; // vyšlá faktúra -> príjem
   const docType = isOut ? 'P' : 'V';
-  const category = isOut ? 'UP' : 'OV';
+  const category = inv.category || (isOut ? 'UP' : 'OV');
   const text = `Úhrada faktúry ${inv.number}`;
   if (method === 'cash') {
     const doc = {
@@ -660,7 +676,7 @@ app.post('/api/bankmoves/import', async (req, res) => {
     if (!(amt > 0)) continue;
     const type = m.type === 'V' ? 'V' : 'P';
     const inv = m.invoiceId ? db.invoices.find(i => i.id === Number(m.invoiceId)) : null;
-    const category = m.category || (inv ? (inv.type === 'INO' ? 'UP' : 'OV') : (type === 'P' ? 'OP' : 'OV'));
+    const category = m.category || (inv ? (inv.category || (inv.type === 'INO' ? 'UP' : 'OV')) : (type === 'P' ? 'OP' : 'OV'));
     const doc = {
       id: nextId('bankmoves'), accountId: accId, type,
       number: nextNumber('BV', m.date), date: m.date || new Date().toISOString().slice(0, 10),

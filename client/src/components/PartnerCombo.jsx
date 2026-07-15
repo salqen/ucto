@@ -22,8 +22,11 @@ export default function PartnerCombo({ partners = [], value, onChange, placehold
   }, []);
 
   const selected = partners.find(p => String(p.id) === String(value));
-  const list = smartFilter(partners, q).slice(0, 12);
+  const byName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'sk', { sensitivity: 'base' });
+  /* prázdny dopyt → celý zoznam podľa abecedy; s dopytom → inteligentné poradie */
+  const list = (q ? smartFilter(partners, q).slice(0, 30) : [...partners].sort(byName));
   const pick = (p) => { onChange(String(p.id)); setOpen(false); setQ(''); };
+  const selBg = 'var(--hover, rgba(127,127,127,.14))';
 
   return (
     <div ref={ref} style={{ position: 'relative', flex: 1 }}>
@@ -39,22 +42,29 @@ export default function PartnerCombo({ partners = [], value, onChange, placehold
       {open && (
         <div style={{
           position: 'absolute', zIndex: 50, top: '100%', left: 0, right: 0,
-          background: '#fff', border: '1px solid #ccc', borderRadius: 4,
-          boxShadow: '0 4px 12px rgba(0,0,0,.12)', maxHeight: 260, overflowY: 'auto'
+          background: 'var(--panel, #fff)', color: 'var(--text)', border: '1px solid var(--border, #ccc)', borderRadius: 8,
+          boxShadow: 'var(--shadow, 0 4px 12px rgba(0,0,0,.12))', maxHeight: 300, overflowY: 'auto'
         }}>
           {list.map(p => {
             const sel = String(p.id) === String(value);
             return (
               <div key={p.id} onMouseDown={e => { e.preventDefault(); pick(p); }}
-                style={{ padding: '6px 10px', cursor: 'pointer', fontSize: 13, background: sel ? '#eef' : '#fff' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#eef')}
-                onMouseLeave={e => (e.currentTarget.style.background = sel ? '#eef' : '#fff')}>
-                <b>{p.name}</b>
-                <span style={{ color: '#666' }}>{p.ico ? ' · IČO ' + p.ico : ''}{p.city ? ' · ' + p.city : ''}</span>
+                title={p.name}
+                style={{
+                  display: 'flex', alignItems: 'baseline', gap: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 13,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  borderBottom: '1px solid var(--border, #eee)', background: sel ? selBg : 'transparent'
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = selBg)}
+                onMouseLeave={e => (e.currentTarget.style.background = sel ? selBg : 'transparent')}>
+                <b style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</b>
+                <span style={{ color: 'var(--muted, #666)', marginLeft: 'auto', flexShrink: 0 }}>
+                  {p.ico ? 'IČO ' + p.ico : ''}{p.ico && p.city ? ' · ' : ''}{p.city || ''}
+                </span>
               </div>
             );
           })}
-          {!list.length && <div style={{ padding: '6px 10px', color: '#999', fontSize: 12 }}>žiadny partner nevyhovuje</div>}
+          {!list.length && <div style={{ padding: '6px 10px', color: 'var(--muted, #999)', fontSize: 12 }}>žiadny partner nevyhovuje</div>}
         </div>
       )}
     </div>

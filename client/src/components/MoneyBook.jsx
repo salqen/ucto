@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { api, eur, dt, today } from '../api.js';
 import { PageHead, Modal, Frow, useSort, SortTh } from './ui.jsx';
 import ImportStatement from './ImportStatement.jsx';
+import CatSelect, { catName } from './CatSelect.jsx';
+import DateRangeCalendar from './DateRangeCalendar.jsx';
+
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 /*
  Spoločný modul pre Pokladňu a Banku.
@@ -23,6 +27,15 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
   const [accEdit, setAccEdit] = useState(null);
   const [sel, setSel] = useState(null);
   const [imp, setImp] = useState(false);
+  const [q, setQ] = useState('');
+  const [year, setYear] = useState(String(new Date().getFullYear()));
+  const [fType, setFType] = useState('all');
+  const [fCat, setFCat] = useState('');
+  const [fPartner, setFPartner] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [showCal, setShowCal] = useState(false);
+  const listId = 'mb-partners-' + docColl;
 
   const load = () => {
     api.get('/' + accColl).then(a => {
@@ -35,6 +48,7 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
     load();
     api.get('/partners').then(setPartners);
     api.get('/categories').then(setCats);
+    api.get('/settings').then(s => { if (s?.year) setYear(String(s.year)); }).catch(() => {});
   }, []);
 
   const acc = accounts.find(a => a.id === accId);
@@ -46,12 +60,24 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
       ...d, balance: bal,
       partnerName: (partners.find(p => p.id === d.partnerId) || {}).name || '',
       typeName: d.type === 'P' ? 'Príjem' : 'Výdaj',
-      categoryName: (cats[d.type] || []).find(c => c.code === d.category)?.name || d.category || '',
+      categoryName: catName(cats, d.type, d.category),
       inAmt: d.type === 'P' ? Number(d.amount || 0) : null,
       outAmt: d.type === 'V' ? Number(d.amount || 0) : null
     };
   });
-  const [rows, sort, onSort] = useSort(baseRows);
+  const accBalance = baseRows.length ? baseRows[baseRows.length - 1].balance : Number(acc?.initial || 0);
+  const years = [...new Set([String(new Date().getFullYear()), year, ...docs.map(d => (d.date || '').slice(0, 4)).filter(Boolean)])]
+    .filter(Boolean).sort().reverse();
+  const filteredRows = baseRows.filter(r =>
+    (!year || (r.date || '').startsWith(year)) &&
+    (fType === 'all' || r.type === fType) &&
+    (!fCat || r.category === fCat) &&
+    (!fPartner || norm(r.partnerName).includes(norm(fPartner))) &&
+    (!dateFrom || (r.date && r.date >= dateFrom)) &&
+    (!dateTo || (r.date && r.date <= dateTo)) &&
+    (!q || ((r.number || '') + ' ' + (r.text || '') + ' ' + (r.vs || '')).toLowerCase().includes(q.toLowerCase()))
+  );
+  const [rows, sort, onSort] = useSort(filteredRows);
 
   const saveDoc = async (e) => {
     e.preventDefault();
@@ -95,9 +121,39 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
         <button className="btn danger" disabled={!sel} onClick={delDoc}>Zmazať</button>
         <button className="btn" disabled={!acc} onClick={() => setAccEdit(acc)}>Nastavenie: {acc?.name}</button>
         <span style={{ marginLeft: 'auto', alignSelf: 'center' }}>
-          Zostatok: <b style={{ color: '#5f9622', fontSize: 15 }}>{eur(rows.length ? rows[rows.length - 1].balance : acc?.initial)}</b>
+          Zostatok: <b style={{ color: '#5f9622', fontSize: 15 }}>{eur(accBalance)}</b>
         </span>
       </div>
+
+      <div className="filter-row">
+        <label>Účtovný rok</label>
+        <select value={year} onChange={e => setYear(e.target.value)}>
+          <option value="">Všetky</option>
+          {years.map(y => <option key={y} value={y}>{y}</option>)}
+        </select>
+        <label>Typ</label>
+        <select value={fType} onChange={e => { setFType(e.target.value); setFCat(''); }}>
+          <option value="all">Všetko</option>
+          <option value="P">Príjmy</option>
+          <option value="V">Výdavky</option>
+        </select>
+        <label>Druh</label>
+        <CatSelect cats={cats} type={fType === 'all' ? 'all' : fType} value={fCat} includeAll allLabel="Všetky druhy" onChange={setFCat} />
+        <label>Partner</label>
+        <input list={listId} value={fPartner} onChange={e => setFPartner(e.target.value)} placeholder="partner…" />
+        <datalist id={listId}>
+          {[...partners].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'sk'))
+            .map(p => <option key={p.id} value={p.name} />)}
+        </datalist>
+        <label>Hľadať</label>
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder="doklad, text, VS…" />
+        <button className="btn" onClick={() => setShowCal(s => !s)}>📅 Dátum</button>
+      </div>
+      {showCal && (
+        <div style={{ margin: '8px 0' }}>
+          <DateRangeCalendar from={dateFrom} to={dateTo} onChange={({ from, to }) => { setDateFrom(from); setDateTo(to); }} />
+        </div>
+      )}
 
       <div className="grid-wrap">
         <table className="grid">
@@ -162,9 +218,8 @@ export default function MoneyBook({ title, accColl, docColl, accKey, accLabel, h
             </Frow>
             <Frow label="Text" req><input value={edit.text} required onChange={e => setEdit(p => ({ ...p, text: e.target.value }))} /></Frow>
             <Frow label="Druh (stĺpec denníka)" req>
-              <select value={edit.category} onChange={e => setEdit(p => ({ ...p, category: e.target.value }))}>
-                {(cats[edit.type] || []).map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-              </select>
+              <CatSelect cats={cats} type={edit.type} value={edit.category} required
+                onChange={v => setEdit(p => ({ ...p, category: v }))} />
             </Frow>
             {hasIban && <Frow label="VS"><input value={edit.vs || ''} onChange={e => setEdit(p => ({ ...p, vs: e.target.value }))} /></Frow>}
             <Frow label="Suma (€)" req><input type="number" step="0.01" min="0.01" value={edit.amount} required onChange={e => setEdit(p => ({ ...p, amount: e.target.value }))} /></Frow>
