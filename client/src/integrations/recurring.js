@@ -62,11 +62,12 @@ export function dueIssueDates(template, today, maxIter = 1000) {
 /** Vygeneruje faktúru z šablóny pre daný dátum vystavenia. */
 export function buildInvoiceFromTemplate(template, issueDate, opts = {}) {
   const items = (template.items || []).map(it => ({ ...it }));
-  const number = opts.number || makeNumber(issueDate, opts.seq);
+  const type = template.type === 'INI' ? 'INI' : 'INO';
+  const number = opts.number || makeNumber(issueDate, opts.seq, type);
   const vs = String(number).replace(/\D/g, '').slice(-10);
   const dueDate = addDays(issueDate, template.dueDays ?? 14);
   return {
-    type: 'INO',
+    type,
     number,
     vs,
     partnerId: template.partnerId,
@@ -77,7 +78,7 @@ export function buildInvoiceFromTemplate(template, issueDate, opts = {}) {
     items,
     total: itemsTotal(items),
     paid: 0,
-    note: (template.note ? template.note + ' · ' : '') + 'Pravidelná faktúra',
+    note: (template.note ? template.note + ' · ' : '') + (type === 'INI' ? 'Pravidelná prijatá faktúra' : 'Pravidelná faktúra'),
     recurringId: template.id,
   };
 }
@@ -85,9 +86,9 @@ export function buildInvoiceFromTemplate(template, issueDate, opts = {}) {
 function addDays(dateStr, days) {
   const d = parse(dateStr); d.setUTCDate(d.getUTCDate() + (Number(days) || 0)); return iso(d);
 }
-function makeNumber(issueDate, seq) {
+function makeNumber(issueDate, seq, type) {
   const ymd = issueDate.replace(/-/g, '');
-  return 'VF' + ymd + String(seq ?? 1).padStart(3, '0');
+  return (type === 'INI' ? 'DF' : 'VF') + ymd + String(seq ?? 1).padStart(3, '0');
 }
 
 /**
